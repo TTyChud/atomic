@@ -8,11 +8,9 @@ from atomic.screened_atom import screened_radial
 
 MIN_POINTS_ON_ORBITAL = 100
 
-
 def _points_on_orbital(p_field) -> int:
     v = p_field.values
     return int(np.count_nonzero(v > v.max() * 1e-3))
-
 
 class TestDisplayWindow:
     def test_windows_to_where_the_function_lives(self):
@@ -47,7 +45,6 @@ class TestDisplayWindow:
         at_1em3 = r[np.nonzero(density > density.max() * 1e-3)[0][-1]]
         assert display_window(r, density) > at_1em3
 
-
 @pytest.mark.parametrize(
     ("z", "n_electrons", "n", "l"),
     [
@@ -74,7 +71,6 @@ class TestScreenedOutputGrid:
         _, p = screened_radial(z, n_electrons, n, l)
         assert "windowed from a solve box" in p.provenance.method
 
-
 @pytest.mark.parametrize(
     ("z", "n_electrons", "n", "l"),
     [(18, 18, 1, 0), (18, 18, 3, 1), (10, 10, 1, 0)],
@@ -91,7 +87,6 @@ class TestHartreeFockOutputGrid:
     def test_provenance_states_both_radii(self, z, n_electrons, n, l):
         _, p = hf_radial(z, n_electrons, n, l)
         assert "windowed from a mesh reaching" in p.provenance.method
-
 
 def test_the_inner_orbital_is_drawn_far_tighter_than_the_valence_one():
     _, core = screened_radial(18, 18, 1, 0)

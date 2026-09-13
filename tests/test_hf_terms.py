@@ -16,22 +16,18 @@ from atomic.numerics.slater import pair_potential
 def hydrogenic_1s(r, z):
     return 2.0 * z**1.5 * r * np.exp(-z * r)
 
-
 @pytest.fixture
 def grid():
     return np.linspace(1e-6, 40.0, 40000)
-
 
 def test_hydrogen_feels_no_direct_potential(grid):
     shells = (Subshell(n=1, l=0, q=1, p=hydrogenic_1s(grid, 1.0)),)
     assert np.allclose(direct_potential(shells, 0, grid), 0.0)
 
-
 def test_hydrogen_feels_no_exchange(grid):
     shells = (Subshell(n=1, l=0, q=1, p=hydrogenic_1s(grid, 1.0)),)
     psi = hydrogenic_1s(grid, 1.0)
     assert np.allclose(exchange_apply(shells, 0, psi, grid), 0.0)
-
 
 def test_helium_direct_is_exactly_one_hartree_potential(grid):
     p = hydrogenic_1s(grid, 2.0)
@@ -40,12 +36,10 @@ def test_helium_direct_is_exactly_one_hartree_potential(grid):
         direct_potential(shells, 0, grid), pair_potential(p, p, grid, 0)
     )
 
-
 def test_helium_has_no_exchange_term(grid):
     p = hydrogenic_1s(grid, 2.0)
     shells = (Subshell(n=1, l=0, q=2, p=p),)
     assert np.allclose(exchange_apply(shells, 0, p, grid), 0.0)
-
 
 def test_beryllium_cross_shell_exchange_is_one_unit_of_u0(grid):
     p1 = hydrogenic_1s(grid, 4.0)
@@ -56,7 +50,6 @@ def test_beryllium_cross_shell_exchange_is_one_unit_of_u0(grid):
     want = pair_potential(p1, p2, grid, 0) * p2
     assert np.allclose(got, want, rtol=1e-10)
 
-
 def test_beryllium_direct_is_one_unit_of_its_own_plus_two_of_the_other(grid):
     p1 = hydrogenic_1s(grid, 4.0)
     p2 = np.sqrt(2.0) * grid * (1.0 - grid) * np.exp(-grid)
@@ -64,7 +57,6 @@ def test_beryllium_direct_is_one_unit_of_its_own_plus_two_of_the_other(grid):
     shells = (Subshell(n=1, l=0, q=2, p=p1), Subshell(n=2, l=0, q=2, p=p2))
     want = pair_potential(p1, p1, grid, 0) + 2.0 * pair_potential(p2, p2, grid, 0)
     assert np.allclose(direct_potential(shells, 0, grid), want, rtol=1e-10)
-
 
 def test_closed_shell_coefficients_match_the_independent_derivation():
     for l_a in (0, 1, 2):
@@ -74,7 +66,6 @@ def test_closed_shell_coefficients_match_the_independent_derivation():
             closed = (2 * l_a + 1) * wigner_3j(l_a, k, l_a, 0, 0, 0) ** 2
             assert averaged == pytest.approx(closed)
 
-
 def test_cross_shell_coefficient_matches_closed_shell_form():
     for l_a, l_b in ((0, 1), (1, 1), (1, 2)):
         q_full_b = 2 * (2 * l_b + 1)
@@ -83,19 +74,15 @@ def test_cross_shell_coefficient_matches_closed_shell_form():
             closed = (2 * l_b + 1) * wigner_3j(l_a, k, l_b, 0, 0, 0) ** 2
             assert averaged == pytest.approx(closed)
 
-
 def test_p_shell_f2_coefficient_is_the_slater_value():
     assert same_shell_coefficient(1, 2, 6) == pytest.approx(5.0 * 2.0 / 25.0)
-
 
 def test_parity_forbidden_multipole_has_zero_coefficient():
     assert exchange_coefficient(0, 0, 1, 6) == 0.0
 
-
 def test_same_shell_coefficient_rejects_k_zero():
     with pytest.raises(ValueError, match="k > 0"):
         same_shell_coefficient(1, 0, 6)
-
 
 def test_exchange_is_linear_in_the_trial_function(grid):
     p1 = hydrogenic_1s(grid, 4.0)
@@ -110,7 +97,6 @@ def test_exchange_is_linear_in_the_trial_function(grid):
     )
     assert np.allclose(combined, separate, rtol=1e-10)
 
-
 def test_exchange_operator_is_symmetric(grid):
     p1 = hydrogenic_1s(grid, 4.0)
     p2 = np.sqrt(2.0) * grid * (1.0 - grid) * np.exp(-grid)
@@ -121,7 +107,6 @@ def test_exchange_operator_is_symmetric(grid):
     ukv = np.trapezoid(u * exchange_apply(shells, 0, v, grid), grid)
     vku = np.trapezoid(v * exchange_apply(shells, 0, u, grid), grid)
     assert ukv == pytest.approx(vku, rel=1e-10)
-
 
 def test_p_shell_exchange_includes_the_k_two_multipole(grid):
     p = hydrogenic_1s(grid, 6.0)

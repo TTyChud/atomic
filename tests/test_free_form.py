@@ -13,7 +13,6 @@ def test_coulomb_recovers_hydrogen():
     assert all(lvl.trusted for lvl in res.counterfactual[:3])
     assert res.counterfactual[0].energy.provenance.fidelity is Fidelity.NUMERICAL
 
-
 def test_custom_matches_powerlaw_preset():
     a = free_form_levels("-1/r", l=0, system="h", n_states=3)
     b = force_law_levels("powerlaw", {"p": 1.0}, l=0, system="h", n_states=3)
@@ -21,17 +20,14 @@ def test_custom_matches_powerlaw_preset():
     eb = [c.energy.value for c in b.counterfactual]
     np.testing.assert_allclose(ea, eb, rtol=1e-3)
 
-
 def test_oscillator_recovers_levels():
     res = free_form_levels("0.5*r**2", l=0, system="h", n_states=3)
     e = sorted(lvl.energy.value for lvl in res.counterfactual)
     np.testing.assert_allclose(e[:3], [1.5, 3.5, 5.5], rtol=5e-3)
 
-
 def test_fall_to_center_flagged_untrusted():
     res = free_form_levels("-1/r**3", l=0, system="h", n_states=2)
     assert any(not lvl.trusted for lvl in res.counterfactual) or res.bound_count == 0
-
 
 def test_purely_positive_has_no_trusted_bound_states():
     res = free_form_levels("exp(-r)", l=0, system="h", n_states=2)

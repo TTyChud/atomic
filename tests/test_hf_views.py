@@ -16,7 +16,6 @@ def test_explicit_configuration_reaches_the_orbital():
 
     assert not np.allclose(r_ground.values, r_excited.values, atol=1e-9)
 
-
 def test_exchange_off_reaches_the_orbital_and_the_badge():
     config = aufbau_configuration(10)
     r_hf, _ = hf_radial(10, 10, 2, 1, points=200, config=config)
@@ -28,7 +27,6 @@ def test_exchange_off_reaches_the_orbital_and_the_badge():
     assert r_hf.provenance.fidelity is Fidelity.APPROXIMATION
     assert r_hartree.provenance.fidelity is Fidelity.COUNTERFACTUAL
 
-
 def test_evaluate_hf_state_inherits_the_counterfactual_tier():
     pos = np.array([[0.0, 0.0, 1.0], [0.5, 0.0, 0.5]])
     real = evaluate_hf_state(10, 10, 2, 1, 0, pos)
@@ -36,7 +34,6 @@ def test_evaluate_hf_state_inherits_the_counterfactual_tier():
 
     assert real.provenance.fidelity is Fidelity.APPROXIMATION
     assert hartree.provenance.fidelity is Fidelity.COUNTERFACTUAL
-
 
 def test_pauli_off_refuses_every_subshell_but_the_one_that_exists():
     collapsed = aufbau_configuration(10, pauli=False)
@@ -50,14 +47,12 @@ def test_pauli_off_refuses_every_subshell_but_the_one_that_exists():
     )
     assert r.provenance.fidelity is Fidelity.COUNTERFACTUAL
 
-
 def test_orbital_carries_the_not_an_observable_claim():
     r, p = hf_radial(10, 10, 2, 1, points=200)
     joined = " ".join(r.provenance.assumptions)
     assert "not an observable" in joined
     assert "spherical" in joined
     assert joined == " ".join(p.provenance.assumptions)
-
 
 def test_hf_sampling_reduces_to_hydrogen():
     from scipy import stats
@@ -72,7 +67,6 @@ def test_hf_sampling_reduces_to_hydrogen():
 
     assert stats.kstest(r, cdf).pvalue > 0.01
 
-
 def test_hf_cloud_carries_the_solve_and_the_claim():
     from atomic.sampling import sample_hf_density
 
@@ -82,13 +76,11 @@ def test_hf_cloud_carries_the_solve_and_the_claim():
     assert "not an observable" in joined
     assert "correlation" in joined
 
-
 def test_hf_cloud_goes_counterfactual_with_exchange_off():
     from atomic.sampling import sample_hf_density
 
     cloud = sample_hf_density(10, 10, 2, 1, 0, 2_000, seed=1, exchange=False)
     assert cloud.provenance.fidelity is Fidelity.COUNTERFACTUAL
-
 
 def test_hf_plane_agrees_with_the_evaluator_it_is_built_on():
     from atomic.plane import hf_plane_grid
@@ -105,7 +97,6 @@ def test_hf_plane_agrees_with_the_evaluator_it_is_built_on():
                 float(np.real(direct.values[0])), rel=1e-9, abs=1e-12
             )
 
-
 def test_hf_psi_is_real_on_the_y_zero_plane():
     from atomic.plane import hf_plane_grid
 
@@ -114,7 +105,6 @@ def test_hf_psi_is_real_on_the_y_zero_plane():
     psi = evaluate_hf_state(10, 10, 2, 1, 1, pos).values
     assert np.max(np.abs(np.imag(psi))) < 1e-12
     assert "psi is real on y=0" in " ".join(pg.provenance.assumptions)
-
 
 def test_hf_plane_inherits_the_counterfactual_tier():
     from atomic.plane import hf_plane_grid
@@ -125,12 +115,10 @@ def test_hf_plane_inherits_the_counterfactual_tier():
     assert hartree.provenance.fidelity is Fidelity.COUNTERFACTUAL
     assert not np.allclose(real.values, hartree.values)
 
-
 def test_hf_isosurface_reduces_to_the_closed_form_hydrogen_radius():
     surf = hf_isosurface(1, 1, 1, 0, 0, target_fraction=0.9, resolution=96)
     radii = np.linalg.norm(surf.vertices, axis=1)
     assert radii.mean() == pytest.approx(2.6612, rel=5e-3)
-
 
 def test_helium_hartree_and_hartree_fock_surfaces_are_bit_identical():
     with_x = hf_isosurface(2, 2, 1, 0, 0, resolution=64)
@@ -139,12 +127,10 @@ def test_helium_hartree_and_hartree_fock_surfaces_are_bit_identical():
     assert with_x.provenance.fidelity is Fidelity.APPROXIMATION
     assert without.provenance.fidelity is Fidelity.COUNTERFACTUAL
 
-
 def test_multi_shell_atom_surfaces_differ_with_exchange_off():
     with_x = hf_isosurface(10, 10, 2, 1, 0, resolution=64)
     without = hf_isosurface(10, 10, 2, 1, 0, resolution=64, exchange=False)
     assert not np.array_equal(with_x.vertices, without.vertices)
-
 
 def _orbital_mean_radius(z, n_electrons, n, l, config, exchange, pauli):
     _, p = hf_radial(
@@ -154,7 +140,6 @@ def _orbital_mean_radius(z, n_electrons, n, l, config, exchange, pauli):
     return float(
         np.trapezoid(p.grid * p.values, p.grid) / np.trapezoid(p.values, p.grid)
     )
-
 
 def test_pauli_collapse_orders_two_independent_measures_the_same_way():
     real_cfg = aufbau_configuration(4)
@@ -177,7 +162,6 @@ def test_pauli_collapse_orders_two_independent_measures_the_same_way():
 
     assert surface_sign != 0
     assert surface_sign == quadrature_sign
-
 
 def test_the_collapsed_atom_shrinks_while_its_1s_swells():
     from atomic.hf_atom import hf_mean_radius, solve_hartree_fock

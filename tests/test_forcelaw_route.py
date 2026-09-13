@@ -7,12 +7,10 @@ from atomic.systems import get_system
 
 H_MU = get_system("h").mu_ratio.value
 
-
 @pytest.fixture()
 def client():
     with TestClient(create_app()) as c:
         yield c
-
 
 def test_powerlaw_default_is_hydrogen(client):
     body = client.get("/api/forcelaw").json()
@@ -25,13 +23,11 @@ def test_powerlaw_default_is_hydrogen(client):
     assert body["counterfactual"][0]["energy"]["provenance"]["fidelity"] == "numerical"
     assert len(body["potential_curve"]["r"]) == 256
 
-
 def test_custom_expr_recovers_hydrogen(client):
     body = client.get("/api/forcelaw", params={"preset": "custom", "expr": "-1/r"}).json()
     assert body["preset"] == "custom"
     assert body["expression"] == "-1/r"
     assert all(c["trusted"] for c in body["counterfactual"][:3])
-
 
 def test_forcelaw_validates(client):
     assert client.get("/api/forcelaw", params={"preset": "nope"}).status_code == 422
