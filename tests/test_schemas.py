@@ -16,7 +16,6 @@ def _prov():
         refinement="refine",
     )
 
-
 def test_provenance_round_trip():
     model = ProvenanceModel.from_provenance(_prov())
     data = json.loads(model.model_dump_json())
@@ -25,14 +24,12 @@ def test_provenance_round_trip():
     assert data["error_estimate"] == pytest.approx(1e-6)
     assert data["refinement"] == "refine"
 
-
 def test_quantity_serializes_with_provenance():
     q = Quantity(value=-0.5, unit="hartree", label="E_1", provenance=_prov())
     data = json.loads(QuantityModel.from_quantity(q).model_dump_json())
     assert data["value"] == -0.5
     assert data["unit"] == "hartree"
     assert data["provenance"]["method"] == "test method"
-
 
 def test_field_serializes_values_and_grid():
     r = np.linspace(0.0, 1.0, 5)
@@ -41,14 +38,12 @@ def test_field_serializes_values_and_grid():
     assert data["grid"] == pytest.approx([0.0, 0.25, 0.5, 0.75, 1.0])
     assert data["values"] == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
 
-
 def test_field_model_rejects_stacked_values():
     r = np.linspace(0.0, 1.0, 4)
     f = Field(values=np.zeros((2, 4)), grid=r, unit="dimensionless", grid_unit="bohr",
               label="u", provenance=_prov())
     with pytest.raises(ValueError, match="1-D"):
         FieldModel.from_field(f)
-
 
 def test_every_fidelity_value_is_representable():
     for fid in Fidelity:

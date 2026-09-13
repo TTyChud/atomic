@@ -18,14 +18,12 @@ def ground_state_energy(mesh: RadialMesh, z: float = 1.0) -> float:
         eigh_tridiagonal(diag, offdiag, select="i", select_range=(0, 0), eigvals_only=True)[0]
     )
 
-
 def blunt_wall(mesh: RadialMesh) -> RadialMesh:
     return RadialMesh(
         r=mesh.r, jacobian=mesh.jacobian, step=mesh.step,
         kinetic_diag=mesh.kinetic_diag, kinetic_offdiag=mesh.kinetic_offdiag,
         inner_wall_coupling=0.0, inner_ghost_ratio=0.0,
     )
-
 
 class TestUniformMesh:
     def test_wall_sits_on_the_origin(self):
@@ -50,7 +48,6 @@ class TestUniformMesh:
         diag, _ = mesh.hamiltonian_bands(v, 0)
         assert diag == pytest.approx(mesh.kinetic_diag + v, rel=1e-15)
 
-
 class TestExponentialMesh:
     def test_endpoints_and_jacobian(self):
         mesh = exponential_mesh(1e-3, 60.0, 1000)
@@ -73,7 +70,6 @@ class TestExponentialMesh:
         assert mesh.r[-1] == pytest.approx(40.0)
         with pytest.raises(ValueError, match="Z must be"):
             mesh_for_atom(0, 40.0, 100)
-
 
 class TestBandsAndTransforms:
     def test_band_shapes_and_guards(self):
@@ -110,7 +106,6 @@ class TestBandsAndTransforms:
         f = mesh.r * np.exp(-mesh.r)
         assert mesh.cumulative(f)[-1] == pytest.approx(mesh.integrate(f), rel=1e-12)
 
-
 class TestSizingByStep:
     def test_step_direction_and_shared_endpoints(self):
         coarse = mesh_for_atom_at_step(18, 60.0, 0.01)
@@ -125,7 +120,6 @@ class TestSizingByStep:
     def test_rejects_bad_step(self):
         with pytest.raises(ValueError, match="step must be positive"):
             mesh_for_atom_at_step(2, 60.0, 0.0)
-
 
 class TestRefusals:
     def test_decreasing_mesh_rejected(self):
@@ -156,7 +150,6 @@ class TestRefusals:
         mesh = uniform_mesh(10.0, 100)
         with pytest.raises(ValueError, match="sampled on this mesh"):
             mesh.integrate(np.ones(50))
-
 
 class TestDisplayWindow:
     def test_empty_grid_returns_zero(self):

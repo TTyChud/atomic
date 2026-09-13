@@ -12,7 +12,6 @@ def test_ground_state_is_three_halves_omega():
     assert q.provenance.fidelity is Fidelity.EXACT
     assert math.isclose(q.value, 0.5 * 1.5, rel_tol=1e-12)
 
-
 @pytest.mark.parametrize("k,l,omega,expected", [
     (0, 0, 0.5, 0.75),
     (1, 0, 0.5, 1.75),
@@ -21,7 +20,6 @@ def test_ground_state_is_three_halves_omega():
 ])
 def test_level_formula(k, l, omega, expected):
     assert math.isclose(oscillator_energy(k, l, omega).value, expected, rel_tol=1e-12)
-
 
 def test_levels_are_ascending_and_counted():
     levels = oscillator_levels(omega=0.4, l=1, n_states=4)

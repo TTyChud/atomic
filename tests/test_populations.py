@@ -15,21 +15,16 @@ from atomic.provenance import Fidelity
 
 K_EV = 8.617333262e-5
 
-
 def two_level(gap_ev=1.0, g0=1, g1=3):
     return (
         Level(n=1, label="ground", energy_ev=0.0, degeneracy=g0),
         Level(n=2, label="excited", energy_ev=gap_ev, degeneracy=g1),
     )
 
-
-
-
 @pytest.mark.parametrize("t", [300.0, 5000.0, 20000.0, 1e6])
 def test_fractions_sum_to_one_at_every_temperature(t):
     fractions = boltzmann_fractions(hydrogen_levels(n_max=6), t)
     assert sum(f.value for f in fractions) == pytest.approx(1.0, rel=1e-12)
-
 
 def test_a_two_level_system_matches_the_hand_computed_ratio():
     t = 10000.0
@@ -38,12 +33,10 @@ def test_a_two_level_system_matches_the_hand_computed_ratio():
     expected = 3.0 * math.exp(-1.0 / (K_EV * t))
     assert f[1].value / f[0].value == pytest.approx(expected, rel=1e-9)
 
-
 def test_low_temperature_puts_everything_in_the_ground_level():
     f = boltzmann_fractions(hydrogen_levels(n_max=6), 300.0)
     assert f[0].value == pytest.approx(1.0, abs=1e-12)
     assert all(x.value < 1e-100 for x in f[1:])
-
 
 def test_high_temperature_approaches_the_degeneracy_ratio():
     levels = hydrogen_levels(n_max=4)
@@ -52,20 +45,15 @@ def test_high_temperature_approaches_the_degeneracy_ratio():
     for level, frac in zip(levels, f, strict=True):
         assert frac.value == pytest.approx(level.degeneracy / total_g, rel=1e-3)
 
-
 def test_excited_fraction_rises_monotonically_with_temperature():
     levels = hydrogen_levels(n_max=6)
     n2 = [boltzmann_fractions(levels, t)[1].value for t in (3000, 6000, 10000, 20000)]
     assert all(a < b for a, b in zip(n2, n2[1:], strict=False)), n2
 
-
 def test_rejects_a_non_positive_temperature():
     for bad in (0.0, -1.0):
         with pytest.raises(ValueError, match="temperature"):
             boltzmann_fractions(hydrogen_levels(n_max=3), bad)
-
-
-
 
 @pytest.mark.parametrize("n_max", [1, 3, 6])
 def test_gross_degeneracies_sum_to_two_n_squared_per_shell(n_max):
@@ -74,7 +62,6 @@ def test_gross_degeneracies_sum_to_two_n_squared_per_shell(n_max):
         g = sum(x.degeneracy for x in levels if x.n == n)
         assert g == 2 * n * n, f"shell n={n}"
 
-
 @pytest.mark.parametrize("n_max", [1, 3, 6])
 def test_fine_structure_degeneracies_also_sum_to_two_n_squared(n_max):
     levels = hydrogen_levels(n_max=n_max, fine_structure=True)
@@ -82,13 +69,9 @@ def test_fine_structure_degeneracies_also_sum_to_two_n_squared(n_max):
         g = sum(x.degeneracy for x in levels if x.n == n)
         assert g == 2 * n * n, f"shell n={n}"
 
-
-
-
 def test_partition_function_is_the_ground_degeneracy_when_cold():
     u = partition_function(hydrogen_levels(n_max=6), 300.0)
     assert u.value == pytest.approx(2.0, rel=1e-9)
-
 
 def test_partition_function_discloses_its_truncation():
     u = partition_function(hydrogen_levels(n_max=6), 10000.0)
@@ -96,7 +79,6 @@ def test_partition_function_discloses_its_truncation():
     assert any("truncat" in a.lower() for a in u.provenance.assumptions)
     assert any("n_max=6" in a for a in u.provenance.assumptions)
     assert u.provenance.refinement
-
 
 def test_truncation_matters_more_at_high_temperature():
     def spread(t):
@@ -107,14 +89,10 @@ def test_truncation_matters_more_at_high_temperature():
     assert spread(3000.0) == pytest.approx(1.0, rel=1e-6)
     assert spread(50000.0) > 1.5
 
-
-
-
 def test_ionization_is_a_fraction():
     for t in (3000.0, 10000.0, 50000.0):
         x = saha_ionization_fraction(t, electron_density_cm3=1e13, chi_ev=13.6)
         assert 0.0 <= x.value <= 1.0
-
 
 def test_ionization_rises_with_temperature():
     xs = [
@@ -123,14 +101,12 @@ def test_ionization_rises_with_temperature():
     ]
     assert all(a < b for a, b in zip(xs, xs[1:], strict=False)), xs
 
-
 def test_ionization_falls_with_electron_density():
     xs = [
         saha_ionization_fraction(10000.0, ne, 13.6).value
         for ne in (1e10, 1e13, 1e16, 1e19)
     ]
     assert all(a > b for a, b in zip(xs, xs[1:], strict=False)), xs
-
 
 def test_hydrogen_is_about_half_ionized_near_ten_thousand_kelvin():
     def x(t):
@@ -147,7 +123,6 @@ def test_hydrogen_is_about_half_ionized_near_ten_thousand_kelvin():
             hi = mid
     assert 5e3 < lo < 2e4, f"half-ionization at {lo:.0f} K"
 
-
 def test_the_half_ionization_temperature_rises_with_density():
     def t_half(ne):
         lo, hi = 1000.0, 200000.0
@@ -162,20 +137,15 @@ def test_the_half_ionization_temperature_rises_with_density():
     temps = [t_half(ne) for ne in (1e10, 1e13, 1e16)]
     assert all(a < b for a, b in zip(temps, temps[1:], strict=False)), temps
 
-
 def test_saha_says_it_is_not_self_consistent():
     x = saha_ionization_fraction(10000.0, 1e13, 13.6)
     assert x.provenance.fidelity is Fidelity.APPROXIMATION
     assert any("self-consist" in a.lower() for a in x.provenance.assumptions)
     assert any("LTE" in a for a in x.provenance.assumptions)
 
-
 def test_rejects_a_non_positive_density():
     with pytest.raises(ValueError, match="density"):
         saha_ionization_fraction(10000.0, 0.0, 13.6)
-
-
-
 
 def test_emissivity_is_the_product_of_its_three_factors():
     eps = line_emissivity(
@@ -184,20 +154,15 @@ def test_emissivity_is_the_product_of_its_three_factors():
     assert eps.value == pytest.approx(0.01 * 0.5 * 1e8 * 10.2)
     assert "eV" in eps.unit and "s" in eps.unit
 
-
 def test_emissivity_vanishes_in_a_fully_ionized_gas():
     eps = line_emissivity(0.01, 0.0, 1e8, 10.2)
     assert eps.value == 0.0
     assert any("ioniz" in a.lower() for a in eps.provenance.assumptions)
 
-
 def test_emissivity_carries_the_optically_thin_assumption():
     eps = line_emissivity(0.01, 0.5, 1e8, 10.2)
     assert eps.provenance.fidelity is Fidelity.APPROXIMATION
     assert any("optically thin" in a.lower() for a in eps.provenance.assumptions)
-
-
-
 
 def test_boltzmann_constant_matches_scipy():
     from scipy import constants as sc
