@@ -1,4 +1,4 @@
-/// <reference lib="webworker" />
+
 /**
  * The atomic engine, running in the browser.
  *
@@ -31,17 +31,12 @@ interface AsgiResult {
   body_b64: string;
 }
 
-/** Quote a JS string as a Python string literal (JSON escaping is valid). */
 function q(s: string): string {
   return JSON.stringify(s);
 }
 
-/** Staged runtime root, served by the dev server and the production build. */
 const STAGED_ROOT = new URL("/atomic-engine/", import.meta.url).href;
 
-// The dispatch + inline-executor shims live IN the package
-// (atomic/server/engine_shim.py), so the browser runs the same tested code
-// the deployed server ships. Boot just wires the app to them.
 const BOOT_PY = `
 from atomic.server.app import create_app
 from atomic.server.engine_shim import InlineExecutor, install_inline_threadpool, dispatch
@@ -57,7 +52,6 @@ function phase(p: "runtime" | "engine"): void {
   postMessage({ type: "boot-phase", phase: p });
 }
 
-/** Install the package wheel straight from its same-origin URL. */
 async function installWheel(py: Pyodide): Promise<void> {
   const manifest = (await (await fetch(`${STAGED_ROOT}manifest.json`)).json()) as {
     wheel: string;
@@ -78,9 +72,7 @@ async function boot(): Promise<void> {
   })) as unknown as Pyodide;
 
   phase("engine");
-  // Web dependencies from the staged distribution; thumbnails are PNG-encoded
-  // by the package's stdlib writer (atomic.server.png), so no matplotlib.
-  // Then the package's own wheel from the staged distribution.
+
   await py.loadPackage(["numpy", "scipy", "fastapi", "micropip"]);
   await installWheel(py);
 

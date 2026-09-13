@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-
 export type MathPart = { text: string; kind: "base" | "sub" | "sup" };
 
 const SYMBOLS: Record<string, string> = {

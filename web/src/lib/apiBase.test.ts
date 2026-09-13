@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * apiBase reads VITE_API_BASE once at module load, so each case re-imports
- * the module with a fresh env stub.
- */
 async function loadWith(env: Record<string, string | undefined>) {
   vi.resetModules();
   vi.stubEnv("VITE_API_BASE", env.VITE_API_BASE ?? "");

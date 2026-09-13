@@ -1,11 +1,4 @@
-/**
- * Codec for the in-browser engine worker.
- *
- * The worker drives the real Python ASGI app and answers with
- * `{status, content_type, body_b64}` — one shape for JSON routes and binary
- * job channels alike, so status codes (404, 409, 422) survive the boundary.
- * Only the base64 translation lives here.
- */
+
 
 export function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -29,7 +22,6 @@ export interface AsgiResult {
   body_b64: string;
 }
 
-/** Rebuild the exact HTTP Response the ASGI app produced. */
 export function asgiResponse(msg: AsgiResult): Response {
   const bytes = base64ToBytes(msg.body_b64);
   return new Response(bytes.slice().buffer, {

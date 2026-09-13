@@ -57,7 +57,6 @@ export const VIEW_LEADS: Record<string, ViewLead> = {
   },
 };
 
-
 export function describeField(tesla: number): string {
   if (tesla <= 0) return "no field";
   if (tesla < 0.5) return "weaker than a lab electromagnet";
@@ -97,7 +96,6 @@ export function describeResolvingPower(logR: number | null): string {
   return "beyond what most spectrographs reach";
 }
 
-
 export interface ToleranceRow {
   within_tolerance: boolean;
 }
@@ -125,7 +123,6 @@ export function nistSummary(
       `${total - within} sit${total - within === 1 ? "s" : ""} outside it.`;
   return { within, total, allWithin, headline };
 }
-
 
 export interface ScenarioMultipliers {
   hbar: number;
@@ -194,7 +191,6 @@ export function activeScenario(current: ScenarioMultipliers): Scenario | null {
     ) ?? null
   );
 }
-
 
 export const PRESET_BLURBS: Record<string, string> = {
   powerlaw:

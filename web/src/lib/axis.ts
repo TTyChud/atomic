@@ -1,6 +1,5 @@
 import { scaleLinear } from "d3-scale";
 
-
 const UNITS = [
   { unit: "nm" as const, perNm: 1, centreDecimals: 2 },
   { unit: "pm" as const, perNm: 1e3, centreDecimals: 4 },

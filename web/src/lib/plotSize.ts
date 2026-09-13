@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 
-
 export const MIN_PLOT_WIDTH = 240;
 
 export function plotWidth(measured: number, min: number = MIN_PLOT_WIDTH): number {

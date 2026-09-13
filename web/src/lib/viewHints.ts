@@ -1,15 +1,10 @@
 import type { ViewMode } from "../lib/urlState";
 
 export interface ViewHint {
-  /** One line under the tab name: what am I looking at? */
+
   what: string;
 }
 
-/**
- * Per-view one-liners shown as tooltips (and on the mobile tabs' title
- * attribute). They answer the first question a newcomer has — "what is this
- * tab?" — without opening the tour or the intro panel.
- */
 export const VIEW_HINTS: Record<ViewMode, ViewHint> = {
   cloud: {
     what: "the electron's probable positions in 3-D, point by point",
