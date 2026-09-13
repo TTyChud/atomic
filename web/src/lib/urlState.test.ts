@@ -18,7 +18,7 @@ describe("parseAppUrl", () => {
 
   it("drops junk instead of poisoning the store", () => {
     expect(parseAppUrl("?n=banana&view=warp&system=!!!")).toEqual({});
-    expect(parseAppUrl("?l=9&m=9")).toMatchObject({ l: 0, m: 0 });
+    expect(parseAppUrl("?l=9&m=9")).toMatchObject({ n: 6, l: 5, m: 5 });
   });
 
   it("demotes phase to density on the real basis", () => {
@@ -81,8 +81,15 @@ describe("currentUrlState", () => {
   it("picks the addressable slice", () => {
     expect(currentUrlState({ ...URL_DEFAULTS, system: "he+" })).toMatchObject({
       system: "he+",
-      n: 1,
+      n: 6,
     });
+  });
+});
+
+describe("the default place", () => {
+  it("opens on carbon", () => {
+    expect(URL_DEFAULTS.system).toBe("c");
+    expect(URL_DEFAULTS.n).toBe(6);
   });
 });
 

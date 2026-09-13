@@ -60,10 +60,10 @@ export interface UrlState {
 }
 
 export const URL_DEFAULTS: UrlState = {
-  n: 1,
+  n: 6,
   l: 0,
   m: 0,
-  system: "h",
+  system: "c",
   basis: "complex",
   view: "cloud",
   colorMode: "solid",
