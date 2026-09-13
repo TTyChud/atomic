@@ -1435,17 +1435,61 @@ def create_app() -> FastAPI:
 
     @app.get("/api/thumbnail/{n}/{l}/{m}")
     def thumbnail(n: int, l: int, m: int, system: str = "h",
-                  basis: str = "complex", size: int = 120) -> Response:
+                  basis: str = "complex", size: int = 120,
+                  model: str = "gsz", config: str | None = None,
+                  exchange: bool = True, pauli: bool = True) -> Response:
         _validate_state(n, l, m)
-        try:
-            _resolve_system(system)
-        except HTTPException as exc:
-            raise HTTPException(status_code=422, detail=exc.detail) from exc
         if basis not in ("complex", "real"):
             raise HTTPException(status_code=422, detail=f"unknown basis {basis!r}")
         if not 32 <= size <= 256:
             raise HTTPException(status_code=422, detail="size must be in [32, 256]")
-        png = render_thumbnail(n, l, m, system, basis, size)
+        if model not in ("gsz", "hf"):
+            raise HTTPException(status_code=422, detail=f"unknown model {model!r}")
+        stored_config: str | None = None
+        if is_atom_key(system):
+            element = atom_for_key(system)
+            if model == "hf":
+                if not pauli and exchange:
+                    raise HTTPException(
+                        status_code=422,
+                        detail=(
+                            "pauli=false requires exchange=false: exchange energy is a "
+                            "consequence of antisymmetry and the exclusion principle IS "
+                            "antisymmetry, so with the principle off there is nothing for "
+                            "an exchange integral to act on"
+                        ),
+                    )
+                cfg = (
+                    aufbau_configuration(element.z, pauli)
+                    if config is None
+                    else _parse_config_or_422(config, pauli)
+                )
+                _validate_hf_request(element.z, element.z, cfg, pauli)
+                if (n, l) not in [nl for nl, _ in cfg]:
+                    held = ", ".join(
+                        f"{nn}{SUBSHELL_LABELS[ll]}" for (nn, ll), _ in cfg
+                    )
+                    raise HTTPException(
+                        status_code=422,
+                        detail=(
+                            f"subshell {n}{SUBSHELL_LABELS[l]} is not occupied in "
+                            f"Z={element.z}, N={element.z} (which holds {held}); one "
+                            f"Fock operator is built per occupied subshell, so an empty "
+                            f"one has no operator to be an eigenfunction of"
+                        ),
+                    )
+                stored_config = format_config(cfg)
+            else:
+                _screened_element(system)
+        else:
+            try:
+                _resolve_system(system)
+            except HTTPException as exc:
+                raise HTTPException(status_code=422, detail=exc.detail) from exc
+        png = render_thumbnail(
+            n, l, m, system, basis, size,
+            "hf" if model == "hf" else "gsz", stored_config, exchange, pauli,
+        )
         return Response(
             content=png, media_type="image/png",
             headers={"Cache-Control": "public, max-age=86400"},
