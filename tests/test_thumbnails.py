@@ -47,3 +47,40 @@ def test_thumbnail_validation(client):
     assert client.get("/api/thumbnail/2/1/0?basis=cartoon").status_code == 422
     assert client.get("/api/thumbnail/1/1/0").status_code == 422
     assert client.get("/api/thumbnail/2/1/0?system=unobtainium").status_code == 422
+
+
+def test_screened_thumbnail_returns_png(client):
+    r = client.get("/api/thumbnail/2/1/0?system=c&size=48")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/png"
+    assert r.content[:8] == PNG_MAGIC
+
+
+def test_hf_thumbnail_returns_png(client):
+    r = client.get("/api/thumbnail/2/1/0?system=c&model=hf&size=48")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/png"
+    assert r.content[:8] == PNG_MAGIC
+
+
+def test_screened_and_hf_thumbnails_differ(client):
+    a = client.get("/api/thumbnail/2/1/0?system=c&size=48").content
+    b = client.get("/api/thumbnail/2/1/0?system=c&model=hf&size=48").content
+    assert a != b
+
+
+def test_hf_thumbnail_refuses_an_empty_subshell(client):
+    r = client.get("/api/thumbnail/3/2/0?system=c&model=hf&size=48")
+    assert r.status_code == 422
+    assert "not occupied" in r.json()["detail"]
+
+
+def test_sulfur_has_no_gsz_thumbnail_but_hf_is_fine(client):
+    assert client.get("/api/thumbnail/1/0/0?system=s&size=48").status_code == 400
+    r = client.get("/api/thumbnail/1/0/0?system=s&model=hf&size=48")
+    assert r.status_code == 200
+    assert r.content[:8] == PNG_MAGIC
+
+
+def test_thumbnail_rejects_an_unknown_model(client):
+    assert client.get("/api/thumbnail/2/1/0?system=c&model=wat").status_code == 422
