@@ -179,22 +179,6 @@ export interface ProfileInfo {
 
 export type GrowthRegime = "linear" | "saturated" | "damping";
 
-export interface CurveOfGrowthInfo {
-  label: string;
-  wavelength_nm: number;
-  oscillator_strength: number;
-  sigma_nm: number;
-  gamma_nm: number;
-  damping_parameter: number;
-  column_density_m2: number[];
-  equivalent_width_nm: number[];
-  regime: GrowthRegime[];
-  slope: number[];
-  tau_centre: number[];
-  window_nm: number;
-  provenance: Provenance;
-}
-
 export interface AbsorbingLineInfo {
   wavelength_nm: number;
   label: string;
