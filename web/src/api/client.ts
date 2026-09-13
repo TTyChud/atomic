@@ -1,5 +1,5 @@
 import { apiUrl } from "../lib/apiBase";
-import { currentEngineMode, engine } from "../engine/engine";
+import { currentEngineMode, engine, hasLocalServer } from "../engine/engine";
 import type {
   AbsorptionInfo,
   ClassicalGhost,
@@ -42,12 +42,29 @@ export function key(v: string): string {
  * the network API. Absolute URLs (split deploy) always go over the network.
  */
 async function request(url: string, init?: RequestInit): Promise<Response> {
-  if (isLocalRelative(url)) return engine.request(url, init);
+  if (isLocalRelative(url)) {
+    try {
+      return await engine.request(url, init);
+    } catch (e) {
+      // The engine answered (a real 404/409/etc.): surface it honestly.
+      if (engine.ready) throw e;
+      // The engine never booted (no staged runtime, blocked worker). A
+      // same-origin `atomic serve` can still answer — but only on hosts
+      // where one may exist; elsewhere the fetch would just hit the SPA
+      // rewrite and return HTML for a JSON endpoint.
+      const hostname = globalThis.location?.hostname ?? "";
+      if (!hasLocalServer(hostname)) throw e;
+    }
+  }
   return fetch(url, init);
 }
 
 function isLocalRelative(url: string): boolean {
   if (/^https?:\/\//i.test(url)) return false;
+  // No location at all: not a browser (node test runner, SSR). The device
+  // engine cannot exist there — default to the network path.
+  const hostname = globalThis.location?.hostname;
+  if (hostname === undefined) return false;
   // currentEngineMode honors the ?engine=server|device override on top of the
   // origin policy, so the override switches the whole transport, not just the
   // badge. Absolute URLs always go over the network regardless.

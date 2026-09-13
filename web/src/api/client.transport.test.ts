@@ -18,6 +18,10 @@ vi.mock("../engine/engine", () => ({
   },
   currentEngineMode: vi.fn(() => "local"),
   engineMode: vi.fn(() => "local"),
+  hasLocalServer: vi.fn(
+    (hostname: string) =>
+      hostname === "localhost" || hostname === "127.0.0.1",
+  ),
 }));
 
 async function loadClient() {
@@ -118,6 +122,39 @@ describe("transport routing", () => {
 
     expect(meta.kind).toBe("sample");
     expect(fetchSpy).toHaveBeenCalledWith("/api/jobs/abc123/meta", undefined);
+  });
+
+  it("falls back to a same-origin server when the engine cannot boot on localhost", async () => {
+    setLocation("http://localhost:5173/");
+    const fetchSpy = vi.fn().mockResolvedValue(
+      new Response('{"systems":[]}', { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+    const { getSystems } = await loadClient();
+    const { currentEngineMode } = await import("../engine/engine");
+    (currentEngineMode as ReturnType<typeof vi.fn>).mockReturnValue("local");
+    // Engine request fails and the bridge never reached "ready".
+    engineRequest.mockRejectedValue(new Error("pyodide blocked"));
+
+    const res = await getSystems();
+
+    expect(engineRequest).toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledWith("/api/systems", undefined);
+    expect(res).toEqual({ systems: [] });
+  });
+
+  it("surfaces engine errors on hosted origins with no possible server", async () => {
+    setLocation("https://atomic.vercel.app/");
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    const { getJobMeta } = await loadClient();
+    const { currentEngineMode } = await import("../engine/engine");
+    (currentEngineMode as ReturnType<typeof vi.fn>).mockReturnValue("local");
+    engineRequest.mockRejectedValue(new Error("no staged runtime"));
+
+    await expect(getJobMeta("x")).rejects.toThrow("no staged runtime");
+    // A fetch here would return the SPA's index.html for a JSON endpoint.
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("surfaces HTTP errors with the URL and status", async () => {

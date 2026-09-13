@@ -7,17 +7,19 @@ describe("engineMode", () => {
     expect(engineMode("127.0.0.1", "")).toBe("local");
   });
 
+  it("runs on-device on a hosted static UI with no API base", () => {
+    // The staged runtime ships with the UI, so a static host runs the
+    // physics in the visitor's browser — no backend involved.
+    expect(engineMode("atomic.vercel.app", "")).toBe("local");
+  });
+
   it("uses the network when a split-deploy base is configured", () => {
     expect(engineMode("localhost", "https://atomic-api.fly.dev")).toBe("remote");
-  });
-
-  it("uses the network on deployed origins", () => {
-    expect(engineMode("atomic.vercel.app", "")).toBe("remote");
+    expect(engineMode("atomic.vercel.app", "https://api.example.com")).toBe(
+      "remote",
+    );
   });
 });
-
-/** Flush the microtask chain so an awaited `bridge.request` posts its message. */
-const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
 /** Minimal Worker double: records posts, lets tests emit worker messages. */
 class FakeWorker {
@@ -142,3 +144,6 @@ describe("EngineBridge", () => {
     ).not.toThrow();
   });
 });
+
+/** Flush the microtask chain so an awaited `bridge.request` posts its message. */
+const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));

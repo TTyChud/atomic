@@ -1,15 +1,15 @@
 /**
  * Main-thread bridge to the in-browser engine.
  *
- * When the UI is served from localhost (dev server, `vite preview`, or the
- * mounted `atomic serve` UI), requests can be answered by the *real Python
- * engine* running in a Web Worker via Pyodide — the same `atomic` package,
- * the same FastAPI app, the same schemas the deployed server runs. Nothing
- * ships to a server, nothing is stored: the physics happens on the device.
+ * The engine is a Web Worker running the *real* Python package via Pyodide —
+ * the same `atomic` package, the same FastAPI app, the same schemas a server
+ * deploy would run. Nothing is stored, nothing is shared between users: the
+ * physics happens on the device, so the UI can be served as pure static files
+ * from anywhere (localhost, a hosted static host) with no backend at all.
  *
- * Any other origin (a deployed UI) keeps the network transport — downloading
- * a ~50 MB runtime there would be strictly worse than a fast server one hop
- * away. `engineMode` encodes that policy.
+ * A server is still reachable when one exists: `VITE_API_BASE` at build time
+ * (split deploy) or `?engine=server` at runtime point every engine call at
+ * the network instead. `engineMode` encodes that policy.
  */
 
 import { API_BASE } from "../lib/apiBase";
@@ -23,12 +23,21 @@ export type EngineBoot =
   | { state: "ready"; version: string }
   | { state: "error"; error: string };
 
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "0.0.0.0"]);
+/**
+ * Device mode unless a server is explicitly configured via a split-deploy API
+ * base. The UI ships the staged engine runtime alongside itself, so any host
+ * — localhost or a public static host — can run the physics on-device.
+ */
+export function engineMode(_hostname: string, apiBase: string): EngineMode {
+  return apiBase === "" ? "local" : "remote";
+}
 
-/** Device mode: same-origin localhost and no split-deploy API base. */
-export function engineMode(hostname: string, apiBase: string): EngineMode {
-  if (apiBase !== "") return "remote";
-  return LOCAL_HOSTS.has(hostname) ? "local" : "remote";
+/** Hosts where an `atomic serve` process may actually be listening. */
+const SERVER_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "0.0.0.0"]);
+
+/** True when falling back to a same-origin server could plausibly work. */
+export function hasLocalServer(hostname: string): boolean {
+  return SERVER_HOSTS.has(hostname);
 }
 
 /**
