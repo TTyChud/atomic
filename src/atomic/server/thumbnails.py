@@ -1,14 +1,9 @@
-import io
 from functools import lru_cache
-
-import matplotlib
-from matplotlib import image as mpl_image
 
 from atomic.atoms import atom_for_key, is_atom_key, parse_config
 from atomic.plane import hf_plane_grid, plane_grid, screened_plane_grid
+from atomic.server.png import encode_png, inferno_rgb
 from atomic.systems import get_system
-
-matplotlib.use("Agg")
 
 GAMMA = 0.5
 
@@ -49,6 +44,6 @@ def render_thumbnail(
     rho = pg.values
     vmax = float(rho.max())
     t = (rho / vmax) ** GAMMA if vmax > 0.0 else rho
-    buf = io.BytesIO()
-    mpl_image.imsave(buf, t[::-1], cmap="inferno", vmin=0.0, vmax=1.0, format="png")
-    return buf.getvalue()
+    flipped = t[::-1]
+    rgb = inferno_rgb(flipped.tolist())
+    return encode_png(rgb, flipped.shape[1], flipped.shape[0])

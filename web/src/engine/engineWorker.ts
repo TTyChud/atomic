@@ -78,9 +78,10 @@ async function boot(): Promise<void> {
   })) as unknown as Pyodide;
 
   phase("engine");
-  // Web dependencies from the staged distribution; matplotlib powers the
-  // thumbnail endpoints. Then the package's own wheel from the VFS.
-  await py.loadPackage(["numpy", "scipy", "fastapi", "matplotlib", "micropip"]);
+  // Web dependencies from the staged distribution; thumbnails are PNG-encoded
+  // by the package's stdlib writer (atomic.server.png), so no matplotlib.
+  // Then the package's own wheel from the staged distribution.
+  await py.loadPackage(["numpy", "scipy", "fastapi", "micropip"]);
   await installWheel(py);
 
   await py.runPythonAsync(BOOT_PY);

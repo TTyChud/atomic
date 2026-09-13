@@ -30,24 +30,23 @@ WEB = ROOT / "web"
 STAGE = WEB / "public" / "atomic-engine"
 PYODIDE_NM = WEB / "node_modules" / "pyodide"
 
-# Runtime files the browser actually requests (the rest of the npm package is
-# Node tooling: pyodide-build helpers, docs, node-only entry points).
+# Runtime files the browser actually requests. The npm package also ships
+# node-only entry points and maps for them; the engine worker loads the .mjs
+# directly, so only the core wasm, lock file, and stdlib are needed.
 PYODIDE_KEEP = [
     "pyodide.asm.mjs",
     "pyodide.asm.wasm",
     "pyodide-lock.json",
-    "pyodide.mjs",
-    "pyodide.mjs.map",
-    "pyodide.js",
-    "pyodide.js.map",
     "python_stdlib.zip",
-    "console.html",
 ]
 
 # Python packages the engine imports, resolved to their full dependency
 # closure from pyodide-lock.json and downloaded next to the runtime so
-# loadPackage never touches a third-party CDN at runtime.
-PYODIDE_PKGS = ["numpy", "scipy", "fastapi", "matplotlib", "micropip"]
+# loadPackage never touches a third-party CDN at runtime. matplotlib is
+# deliberately absent: thumbnails are encoded by the stdlib PNG writer in
+# atomic/server/png.py, which keeps ~9 MB (matplotlib + Pillow + fonttools +
+# contourpy + kiwisolver + cycler + pyparsing) out of the visitor download.
+PYODIDE_PKGS = ["numpy", "scipy", "fastapi", "micropip"]
 
 
 def _lock() -> dict:

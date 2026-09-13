@@ -1,0 +1,109 @@
+"""Minimal PNG encoding for thumbnails — no plotting stack.
+
+`render_thumbnail` needs exactly one thing from the visualization world: map
+a normalized density field through the inferno palette and emit PNG bytes.
+Importing matplotlib for that pulled ~9 MB of plotting machinery (plus Pillow,
+fonttools, contourpy) into every environment that serves a thumbnail —
+including the in-browser engine's download.
+
+This module writes the PNG with the standard library and a vendored 256-entry
+inferno lookup table (extracted from matplotlib's colormap definition and
+quantized the way its PNG writer does — floor to 8 bits per channel).
+Truecolor RGB, filter 0, zlib level 9: pixels match the old output exactly.
+"""
+
+from __future__ import annotations
+
+import struct
+import zlib
+
+# fmt: off
+_INFERNO: tuple[int, ...] = (
+    0x000003, 0x000004, 0x000006, 0x010007, 0x010109, 0x01010b, 0x02010e,
+    0x020210, 0x030212, 0x040314, 0x040316, 0x050418, 0x06041b, 0x07051d,
+    0x08061f, 0x090621, 0x0a0723, 0x0b0726, 0x0d0828, 0x0e082a, 0x0f092d,
+    0x10092f, 0x120a32, 0x130a34, 0x140b36, 0x160b39, 0x170b3b, 0x190b3e,
+    0x1a0b40, 0x1c0c43, 0x1d0c45, 0x1f0c47, 0x200c4a, 0x220b4c, 0x240b4e,
+    0x260b50, 0x270b52, 0x290b54, 0x2b0a56, 0x2d0a58, 0x2e0a5a, 0x300a5c,
+    0x32095d, 0x34095f, 0x350960, 0x370961, 0x390962, 0x3b0964, 0x3c0965,
+    0x3e0966, 0x400966, 0x410967, 0x430a68, 0x450a69, 0x460a69, 0x480b6a,
+    0x4a0b6a, 0x4b0c6b, 0x4d0c6b, 0x4f0d6c, 0x500d6c, 0x520e6c, 0x530e6d,
+    0x550f6d, 0x570f6d, 0x58106d, 0x5a116d, 0x5b116e, 0x5d126e, 0x5f126e,
+    0x60136e, 0x62146e, 0x63146e, 0x65156e, 0x66156e, 0x68166e, 0x6a176e,
+    0x6b176e, 0x6d186e, 0x6e186e, 0x70196e, 0x72196d, 0x731a6d, 0x751b6d,
+    0x761b6d, 0x781c6d, 0x7a1c6d, 0x7b1d6c, 0x7d1d6c, 0x7e1e6c, 0x801f6b,
+    0x811f6b, 0x83206b, 0x85206a, 0x86216a, 0x88216a, 0x892269, 0x8b2269,
+    0x8d2369, 0x8e2468, 0x902468, 0x912567, 0x932567, 0x952666, 0x962666,
+    0x982765, 0x992864, 0x9b2864, 0x9c2963, 0x9e2963, 0xa02a62, 0xa12b61,
+    0xa32b61, 0xa42c60, 0xa62c5f, 0xa72d5f, 0xa92e5e, 0xab2e5d, 0xac2f5c,
+    0xae305b, 0xaf315b, 0xb1315a, 0xb23259, 0xb43358, 0xb53357, 0xb73456,
+    0xb83556, 0xba3655, 0xbb3754, 0xbd3753, 0xbe3852, 0xbf3951, 0xc13a50,
+    0xc23b4f, 0xc43c4e, 0xc53d4d, 0xc73e4c, 0xc83e4b, 0xc93f4a, 0xcb4049,
+    0xcc4148, 0xcd4247, 0xcf4446, 0xd04544, 0xd14643, 0xd24742, 0xd44841,
+    0xd54940, 0xd64a3f, 0xd74b3e, 0xd94d3d, 0xda4e3b, 0xdb4f3a, 0xdc5039,
+    0xdd5238, 0xde5337, 0xdf5436, 0xe05634, 0xe25733, 0xe35832, 0xe45a31,
+    0xe55b30, 0xe65c2e, 0xe65e2d, 0xe75f2c, 0xe8612b, 0xe9622a, 0xea6428,
+    0xeb6527, 0xec6726, 0xed6825, 0xed6a23, 0xee6c22, 0xef6d21, 0xf06f1f,
+    0xf0701e, 0xf1721d, 0xf2741c, 0xf2751a, 0xf37719, 0xf37918, 0xf47a16,
+    0xf57c15, 0xf57e14, 0xf68012, 0xf68111, 0xf78310, 0xf7850e, 0xf8870d,
+    0xf8880c, 0xf88a0b, 0xf98c09, 0xf98e08, 0xf99008, 0xfa9107, 0xfa9306,
+    0xfa9506, 0xfa9706, 0xfb9906, 0xfb9b06, 0xfb9d06, 0xfb9e07, 0xfba007,
+    0xfba208, 0xfba40a, 0xfba60b, 0xfba80d, 0xfbaa0e, 0xfbac10, 0xfbae12,
+    0xfbb014, 0xfbb116, 0xfbb318, 0xfbb51a, 0xfbb71c, 0xfbb91e, 0xfabb21,
+    0xfabd23, 0xfabf25, 0xfac128, 0xf9c32a, 0xf9c52c, 0xf9c72f, 0xf8c931,
+    0xf8cb34, 0xf8cd37, 0xf7cf3a, 0xf7d13c, 0xf6d33f, 0xf6d542, 0xf5d745,
+    0xf5d948, 0xf4db4b, 0xf4dc4f, 0xf3de52, 0xf3e056, 0xf3e259, 0xf2e45d,
+    0xf2e660, 0xf1e864, 0xf1e968, 0xf1eb6c, 0xf1ed70, 0xf1ee74, 0xf1f079,
+    0xf1f27d, 0xf2f381, 0xf2f485, 0xf3f689, 0xf4f78d, 0xf5f891, 0xf6fa95,
+    0xf7fb99, 0xf9fc9d, 0xfafda0, 0xfcfea4,
+)
+# fmt: on
+
+
+def _chunk(kind: bytes, data: bytes) -> bytes:
+    """One PNG chunk: length, type, payload, CRC-32."""
+    return (
+        struct.pack(">I", len(data))
+        + kind
+        + data
+        + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+    )
+
+
+def inferno_rgb(values: list[list[float]]) -> bytes:
+    """Map normalized [0, 1] values through inferno into RGB bytes.
+
+    Returns `height * width * 3` bytes in row-major order, ready for
+    `encode_png`. The LUT entry is chosen by ``floor(v * 256)`` — the exact
+    indexing matplotlib's ListedColormap uses — so pixels match the previous
+    matplotlib-rendered thumbnails bit for bit.
+    """
+    rgb = bytearray()
+    for row in values:
+        for v in row:
+            i = min(255, max(0, int(v * 256.0)))
+            word = _INFERNO[i]
+            rgb += bytes((word >> 16, (word >> 8) & 0xFF, word & 0xFF))
+    return bytes(rgb)
+
+
+def encode_png(rgb: bytes, width: int, height: int) -> bytes:
+    """Encode truecolor RGB pixel bytes (from `inferno_rgb`) as a PNG."""
+    stride = width * 3
+    if len(rgb) != stride * height:
+        raise ValueError(
+            f"RGB payload is {len(rgb)} bytes; expected {stride * height} "
+            f"for {width}x{height}"
+        )
+    raw = b"".join(
+        b"\x00" + rgb[y * stride : (y + 1) * stride] for y in range(height)
+    )  # filter 0 = None per scanline
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return b"".join(
+        (
+            b"\x89PNG\r\n\x1a\n",
+            _chunk(b"IHDR", ihdr),
+            _chunk(b"IDAT", zlib.compress(raw, 9)),
+            _chunk(b"IEND", b""),
+        )
+    )

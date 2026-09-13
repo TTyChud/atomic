@@ -119,7 +119,7 @@ def test_importing_the_cli_does_not_drag_in_the_server_stack():
         "import sys, atomic.cli; "
         "print(','.join(m for m in ('fastapi', 'uvicorn', 'matplotlib') "
         "if m in sys.modules))"
-    )
+    )  # matplotlib: gone from the runtime deps; the probe would catch a comeback
     done = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True
     )
