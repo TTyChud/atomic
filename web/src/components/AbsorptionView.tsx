@@ -1,10 +1,21 @@
 import { scaleLinear, scaleLog } from "d3-scale";
-import type { AbsorptionInfo, AbsorbingLineInfo } from "../api/types";
+import type { AbsorptionInfo, AbsorbingLineInfo, GrowthRegime } from "../api/types";
 import { formatOffset, offsetAxis, offsetTicks, thinTicks } from "../lib/axis";
 import { Notation } from "../lib/mathText";
 import { plotHeight } from "../lib/plotSize";
 import { Badge } from "./Badge";
-import { REGIME_COLOR, REGIME_LABEL } from "./CurveOfGrowthView";
+
+export const REGIME_COLOR: Record<GrowthRegime, string> = {
+  linear: "#4ade80",
+  saturated: "#fbbf24",
+  damping: "#7dd3fc",
+};
+
+export const REGIME_LABEL: Record<GrowthRegime, string> = {
+  linear: "linear (slope 1)",
+  saturated: "saturated (slope ≈ 0)",
+  damping: "damping (slope ½)",
+};
 
 const SHAPE = { ratio: 0.368, min: 220, max: 300 };
 const BAND_H = 50;

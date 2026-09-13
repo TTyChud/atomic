@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "../state/store";
+import { VIEW_HINTS } from "../lib/viewHints";
 import { VIEW_OPTIONS } from "./Controls";
 
 export const SHORT: Record<string, string> = {
@@ -29,6 +30,7 @@ export function ViewTabs() {
           className={`view-tab${view === v.value ? " view-tab-on" : ""}`}
           aria-pressed={view === v.value}
           aria-label={v.label}
+          title={VIEW_HINTS[v.value]?.what}
           onClick={() => setView(v.value)}
         >
           {SHORT[v.value] ?? v.label}

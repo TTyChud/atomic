@@ -53,8 +53,7 @@
       "id": "when-a-line-stops-measuring",
       "title": "When a line stops measuring anything",
       "body": [
-        "Put more gas in the way and a weak line grows in proportion. A strong one does not: once its core is black it cannot absorb more, and a hundred times the gas barely widens it.",
-        "Tick the ringed box to plot that. The curve of growth belongs to this view rather than to the tour, so it cannot be switched on for you here, and pretending the picture above already shows it would be worse. Its middle branch is where a line stops being a measurement of how much gas there is."
+        "Put more gas in the way and a weak line grows in proportion. A strong one does not: once its core is black it cannot absorb more, and a hundred times the gas barely widens it. That is the curve of growth, and its middle branch is where a line stops being a measurement of how much gas there is."
       ],
       "state": {
         "n": 4,
@@ -65,7 +64,7 @@
         "thermal": true,
         "profile": true
       },
-      "spotlight": "curve-of-growth-toggle"
+      "spotlight": "spectrum-options"
     },
     {
       "id": "absorption",

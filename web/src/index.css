@@ -305,6 +305,14 @@ textarea {
   min-width: 0;
 }
 
+/* Disabled group-header rows inside the system picker. */
+.control-select select option:disabled {
+  color: var(--label);
+  font-weight: 600;
+  background: var(--panel);
+  letter-spacing: 0.04em;
+}
+
 .control-toggle {
   display: flex;
   flex-direction: row;
@@ -714,6 +722,7 @@ input[type="range"]:disabled {
   border-radius: 6px;
   overflow: hidden;
   background: var(--stage);
+  position: relative;
 }
 
 .stage-3d canvas {
@@ -1379,6 +1388,35 @@ svg text .exponent {
   opacity: 0.35;
 }
 
+.recenter-btn {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 5;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--panel-glass);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  padding: 0.28rem 0.6rem;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.recenter-btn:hover {
+  color: var(--accent);
+  border-color: var(--edge-strong);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.recenter-btn:active {
+  color: var(--accent-deep);
+  background: var(--accent);
+}
+
 .surface-hud {
   display: flex;
   flex-direction: column;
@@ -1790,6 +1828,22 @@ p.error {
 
 :root {
   --peek-h: 56px;
+}
+
+.engine-badge {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+}
+
+.engine-badge.engine-ready {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .topbar-btn {

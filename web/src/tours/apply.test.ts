@@ -28,7 +28,6 @@ describe("tourReset", () => {
       "radial",
       "levels",
       "spectrum",
-      "curveOfGrowth",
       "absorptionData",
     ]) {
       expect(out[k as keyof typeof out], `${k} not cleared`).toBeNull();

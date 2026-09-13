@@ -8,7 +8,6 @@ import {
   getChannel,
   getClassical,
   getConstants,
-  getCurveOfGrowth,
   getForceLaw,
   getIndexChannel,
   getJobMeta,
@@ -27,7 +26,6 @@ import type {
   AbsorptionInfo,
   ClassicalGhost,
   ConstantsReport,
-  CurveOfGrowthInfo,
   ForceLawResult,
   HFLevels,
   IsoMeta,
@@ -102,8 +100,6 @@ interface AppState {
   profile: boolean;
   logResolvingPower: number | null;
   profileZoom: [number, number] | null;
-  showCurveOfGrowth: boolean;
-  curveOfGrowth: CurveOfGrowthInfo | null;
   absorption: boolean;
   logColumn: number;
   absorptionData: AbsorptionInfo | null;
@@ -166,8 +162,6 @@ interface AppState {
   setProfile: (profile: boolean) => void;
   setLogResolvingPower: (logResolvingPower: number | null) => void;
   setProfileZoom: (profileZoom: [number, number] | null) => void;
-  setShowCurveOfGrowth: (showCurveOfGrowth: boolean) => void;
-  loadCurveOfGrowth: (lambdaNm: number) => Promise<void>;
   setAbsorption: (absorption: boolean) => void;
   setLogColumn: (logColumn: number) => void;
   loadAbsorption: () => Promise<void>;
@@ -227,7 +221,6 @@ export const INVALIDATED = {
   spectrum: null,
   hfLevels: null,
   hfStatus: "idle",
-  curveOfGrowth: null,
   absorptionData: null,
   profileZoom: null as [number, number] | null,
   ghost: null,
@@ -261,7 +254,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   system: "c",
   basis: "complex",
   view: "cloud",
-  colorMode: "solid",
+  colorMode: "density",
   planeQuantity: "density",
   count: 100000,
   sheet: "collapsed",
@@ -287,7 +280,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
   exchange: true,
   pauli: true,
   compare: false,
-  curveOfGrowth: null,
   absorptionData: null,
   temperatureK: 10000,
   logNe: 13,
@@ -295,7 +287,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
   profileZoom: null,
   thermal: false,
   profile: false,
-  showCurveOfGrowth: false,
   absorption: false,
   logColumn: 20,
   labConst: { hbar: 1, e: 1, m_e: 1, eps0: 1, c: 1 },
@@ -460,8 +451,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setProfile: (profile) => set({ profile, spectrum: null }),
   setLogResolvingPower: (logResolvingPower) => set({ logResolvingPower, spectrum: null }),
   setProfileZoom: (profileZoom) =>
-    set({ profileZoom, spectrum: null, curveOfGrowth: null, absorptionData: null }),
-  setShowCurveOfGrowth: (showCurveOfGrowth) => set({ showCurveOfGrowth }),
+    set({ profileZoom, spectrum: null, absorptionData: null }),
   setAbsorption: (absorption) => set({ absorption, absorptionData: null }),
   setLogColumn: (logColumn) => set({ logColumn, absorptionData: null }),
 
@@ -659,20 +649,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     } catch {
       set({ forceStatus: "error" });
     }
-  },
-
-  loadCurveOfGrowth: async (lambdaNm) => {
-    const { system, fineStructure, temperatureK, logNe, logResolvingPower } = get();
-    set({
-      curveOfGrowth: await getCurveOfGrowth({
-        system,
-        nMax: 6,
-        fineStructure,
-        lambdaNm,
-        thermal: { temperatureK, electronDensityCm3: 10 ** logNe },
-        resolvingPower: logResolvingPower === null ? null : 10 ** logResolvingPower,
-      }),
-    });
   },
 
   loadAbsorption: async () => {

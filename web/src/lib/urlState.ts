@@ -66,7 +66,7 @@ export const URL_DEFAULTS: UrlState = {
   system: "c",
   basis: "complex",
   view: "cloud",
-  colorMode: "solid",
+  colorMode: "density",
   planeQuantity: "density",
   labConst: { hbar: 1, e: 1, m_e: 1, eps0: 1, c: 1 },
   labZ: 1,

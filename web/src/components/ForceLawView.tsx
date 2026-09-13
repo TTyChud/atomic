@@ -17,16 +17,43 @@ const SHAPE = { floor: 680, ratio: 0.676, min: 380, max: 560 };
 
 export function ForceLawView() {
   const {
-    system, forcePreset, forceParams, forceL, forceExpr, forceLaw, forceStatus,
+    system, systems, forcePreset, forceParams, forceL, forceExpr, forceLaw, forceStatus,
     setForcePreset, setForceParam, setForceL, setForceExpr, loadForceLaw,
   } = useAppStore();
+  const oneElectron = systems.find((s) => s.key === system)?.kind === "hydrogenic";
+  const systemsLoaded = systems.length > 0;
   useEffect(() => {
+    // The force-law lab solves one-electron systems only; a multi-electron
+    // selection here would be refused, so the view pins itself to hydrogen
+    // until the picker is used.
+    if (!systemsLoaded || !oneElectron) return;
     if (forceLaw === null && forceStatus === "idle") void loadForceLaw();
-  }, [forceLaw, forceStatus, system, loadForceLaw]);
+  }, [forceLaw, forceStatus, system, systemsLoaded, oneElectron, loadForceLaw]);
 
   const exprError = forcePreset === "custom" ? validateExprClient(forceExpr) : null;
 
   const { width: W, ref: wrapRef } = usePlotWidth(SHAPE.floor);
+
+  if (!systemsLoaded) {
+    return (
+      <div className="view-wrap" ref={wrapRef}>
+        <p className="hint-block">Loading the systems…</p>
+      </div>
+    );
+  }
+
+  if (!oneElectron) {
+    return (
+      <div className="view-wrap" ref={wrapRef}>
+        <p className="hint-block">
+          The force-law lab alters the 1/r law for a one-electron system, and
+          {" "}{system} has many electrons: there is no single potential to
+          bend. Pick hydrogen, deuterium, muonic hydrogen or He+ in the state
+          panel and the counterfactual ladder comes back.
+        </p>
+      </div>
+    );
+  }
 
   if (forceStatus === "error" || (forceLaw === null && forceStatus !== "loading")) {
     if (forceLaw === null) {

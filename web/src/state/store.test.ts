@@ -346,13 +346,13 @@ describe("the Back button's landing pad", () => {
   }
 
   it("applies a URL as a whole state, not as a patch", () => {
-    useAppStore.setState({ bField: 4, fineStructure: true, colorMode: "density" });
+    useAppStore.setState({ bField: 4, fineStructure: true, colorMode: "solid" });
     useAppStore.getState().applyUrl({ n: 3, l: 1, m: 0 });
     const s = useAppStore.getState();
     expect([s.n, s.l, s.m]).toEqual([3, 1, 0]);
     expect(s.bField).toBe(0);
     expect(s.fineStructure).toBe(false);
-    expect(s.colorMode).toBe("solid");
+    expect(s.colorMode).toBe("density");
   });
 
   it("clears everything the previous place derived", () => {

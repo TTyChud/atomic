@@ -7,9 +7,15 @@ import { NUCLEUS_MODES, type NucleusMode } from "../lib/nucleus";
 import { isNarrow, useViewport } from "../lib/viewport";
 import { useAppStore } from "../state/store";
 import { Choice, ControlGroup, Select, Slider, Toggle } from "./Field";
-import { ShowPhysics } from "./ShowPhysics";
 
 const PRESET_SYSTEMS = ["h", "d", "t", "mu-h", "ps", "he+"];
+
+const L_LETTERS = ["s", "p", "d", "f", "g", "h"];
+
+const SYSTEM_SECTIONS: { kind: "hydrogenic" | "screened"; label: string; hint: string }[] = [
+  { kind: "hydrogenic", label: "one-electron (exact)", hint: "solved in closed form" },
+  { kind: "screened", label: "many-electron (solved)", hint: "needs a numerical model" },
+];
 
 export const COUNT_CHOICES = [10000, 100000, 300000];
 
@@ -59,7 +65,23 @@ export function Controls() {
 
   const systemOptions =
     systems.length > 0
-      ? systems.map((s) => ({ value: s.key, label: `${s.name} (${s.key})` }))
+      ? SYSTEM_SECTIONS.flatMap((section) => {
+          const group = systems.filter((s) => s.kind === section.kind);
+          if (group.length === 0) return [];
+          return [
+            {
+              value: `__section_${section.kind}`,
+              label: `${section.label} — ${section.hint}`,
+              disabled: true,
+            },
+            ...group.map((s) => ({
+              value: s.key,
+              label: section.kind === "hydrogenic"
+                ? `${s.name} (${s.key})`
+                : `${s.name} (${s.key})`,
+            })),
+          ];
+        })
       : PRESET_SYSTEMS.map((k) => ({ value: k, label: k }));
 
   return (
@@ -69,7 +91,10 @@ export function Controls() {
           <Select
             label="n"
             value={String(n)}
-            options={[1, 2, 3, 4, 5, 6].map((v) => ({ value: String(v), label: `n = ${v}` }))}
+            options={[1, 2, 3, 4, 5, 6].map((v) => ({
+              value: String(v),
+              label: `n = ${v} (shell ${v})`,
+            }))}
             onChange={(v) => pick(Number(v), l, m)}
           />
           <div data-tour="l-picker">
@@ -78,7 +103,7 @@ export function Controls() {
               value={String(l)}
               options={Array.from({ length: n }, (_, v) => ({
                 value: String(v),
-                label: `l = ${v}`,
+                label: L_LETTERS[v] !== undefined ? `l = ${v} (${L_LETTERS[v]})` : `l = ${v}`,
                 disabled: !subshellAvailable(hfLevels, model, n, v),
               }))}
               onChange={(v) => pick(n, Number(v), m)}
@@ -219,26 +244,30 @@ export function Controls() {
             />
           </div>
         )}
-        <Choice<ColorMode>
-          legend="cloud color"
-          value={colorMode}
-          onChange={setColorMode}
-          options={[
-            { value: "solid", label: "solid" },
-            { value: "density", label: "density" },
-            { value: "phase", label: "phase", disabled: basis === "real" },
-          ]}
-        />
-        <Choice<PlaneQuantity>
-          legend="plane quantity"
-          value={planeQuantity}
-          onChange={setPlaneQuantity}
-          options={[
-            { value: "density", label: "density" },
-            { value: "psi", label: "psi" },
-          ]}
-        />
-        {narrow && (
+        {view === "cloud" && (
+          <Choice<ColorMode>
+            legend="cloud color"
+            value={colorMode}
+            onChange={setColorMode}
+            options={[
+              { value: "solid", label: "solid" },
+              { value: "density", label: "density" },
+              { value: "phase", label: "phase", disabled: basis === "real" },
+            ]}
+          />
+        )}
+        {view === "plane" && (
+          <Choice<PlaneQuantity>
+            legend="plane quantity"
+            value={planeQuantity}
+            onChange={setPlaneQuantity}
+            options={[
+              { value: "density", label: "density" },
+              { value: "psi", label: "psi" },
+            ]}
+          />
+        )}
+        {narrow && view === "cloud" && (
           <p className="panel-hint">
             A phone opens at {COUNT_CHOICES[0].toLocaleString()} draws. The larger
             counts still work here and will be slower to draw, not less accurate:
@@ -246,25 +275,28 @@ export function Controls() {
             picture of the same |ψ|².
           </p>
         )}
-        <Slider
-          label="cloud points"
-          readout={count.toLocaleString()}
-          min={1000}
-          max={300000}
-          step={1000}
-          value={count}
-          onChange={setCount}
-        />
-        <div data-tour="nucleus-picker">
-          <Choice<NucleusMode>
-            legend="nucleus"
-            value={nucleusMode}
-            onChange={setNucleusMode}
-            options={NUCLEUS_MODES.map((o) => ({ value: o.value, label: o.label }))}
-          />
-        </div>
+        {view === "cloud" && (
+          <>
+            <Slider
+              label="cloud points"
+              readout={count.toLocaleString()}
+              min={1000}
+              max={300000}
+              step={1000}
+              value={count}
+              onChange={setCount}
+            />
+            <div data-tour="nucleus-picker">
+              <Choice<NucleusMode>
+                legend="nucleus"
+                value={nucleusMode}
+                onChange={setNucleusMode}
+                options={NUCLEUS_MODES.map((o) => ({ value: o.value, label: o.label }))}
+              />
+            </div>
+          </>
+        )}
       </ControlGroup>
-      <ShowPhysics />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { Canvas, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 import { formatSeconds, slowMotionFactor } from "../lib/classical";
 import { Notation } from "../lib/mathText";
@@ -45,6 +46,39 @@ function CameraRig({ distance }: { distance: number }) {
   return null;
 }
 
+/**
+ * Re-aims the camera and the orbit target at the nucleus after the user has
+ * panned or zoomed away. The atom always lives at the origin, so "center the
+ * atom" means restoring the framing the view opens with: the same offset
+ * direction, the orbital's own distance, and a clean look-at.
+ */
+function Recenter({
+  distance,
+  controlsRef,
+  requestRef,
+}: {
+  distance: number;
+  controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  requestRef: React.MutableRefObject<(() => void) | null>;
+}) {
+  const camera = useThree((s) => s.camera as THREE.PerspectiveCamera);
+  useEffect(() => {
+    requestRef.current = () => {
+      camera.position.set(distance * 0.7, distance * 0.45, distance);
+      camera.lookAt(0, 0, 0);
+      const controls = controlsRef.current;
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+    };
+    return () => {
+      requestRef.current = null;
+    };
+  }, [camera, distance, controlsRef, requestRef]);
+  return null;
+}
+
 const WEBGL = (() => {
   try {
     const canvas = document.createElement("canvas");
@@ -53,6 +87,28 @@ const WEBGL = (() => {
     return false;
   }
 })();
+
+/**
+ * Watches the WebGL context and reports loss/restoration. A lost context is
+ * the GPU refusing the workload (too many contexts, driver reset, memory
+ * pressure) — not a bug in the scene graph. Browsers restore automatically
+ * unless the loss is permanent (too many contexts is the usual cause), so
+ * the view surfaces what happened instead of silently freezing on the last
+ * frame.
+ */
+function ContextGuard({ onLost }: { onLost: (permanent: boolean) => void }) {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    const lost = (e: Event) => {
+      e.preventDefault();
+      onLost(Boolean((e as WebGLContextEvent).statusMessage?.includes("Not handled")));
+    };
+    const canvas = gl.domElement;
+    canvas.addEventListener("webglcontextlost", lost);
+    return () => canvas.removeEventListener("webglcontextlost", lost);
+  }, [gl, onLost]);
+  return null;
+}
 
 export function CloudView() {
   const {
@@ -64,6 +120,9 @@ export function CloudView() {
     surfaceMode, setSurfaceMode, isoFraction, setIsoFraction,
     iso, isoStatus, loadIso,
   } = useAppStore();
+  const [ctxLost, setCtxLost] = useState<null | "restoring" | "permanent">(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const recenterRef = useRef<(() => void) | null>(null);
   const kind = systemKind(systems, system);
   useEffect(() => {
     if (kind === "hydrogenic" && ghostOn && ghostStatus === "idle") void loadGhost();
@@ -144,9 +203,11 @@ export function CloudView() {
         badge={meta ? <Badge provenance={meta.provenance} /> : undefined}
       />
       <div className="stage-3d">
-        <Canvas camera={{ fov: 50 }} dpr={[1, 2]}>
+        <Canvas camera={{ fov: 50 }} dpr={[1, 1.5]} gl={{ powerPreference: "high-performance" }}>
+          <ContextGuard onLost={() => setCtxLost("restoring")} />
           <color attach="background" args={["#080c0e"]} />
           <CameraRig distance={distance} />
+          <Recenter distance={distance} controlsRef={controlsRef} requestRef={recenterRef} />
           <AxisTriad distance={distance} />
           {showCloud && positions && (
             <PointCloud
@@ -177,11 +238,35 @@ export function CloudView() {
               />
             </mesh>
           )}
-          <OrbitControls />
+          <OrbitControls
+            ref={controlsRef}
+            enablePan={false}
+          />
         </Canvas>
+        <button
+          type="button"
+          className="recenter-btn"
+          title="Point the camera back at the nucleus"
+          onClick={() => recenterRef.current?.()}
+        >
+          ⟲ recenter
+        </button>
         {meta && (
           <div className="stage-caption">
             |ψ|² Monte-Carlo · {meta.count.toLocaleString()} draws
+          </div>
+        )}
+        {ctxLost && (
+          <div className="ghost-hud" role="alert">
+            <div className="ghost-banner">
+              The GPU dropped this canvas — recovering
+            </div>
+            <div className="ghost-readout">
+              A WebGL context was lost: the graphics driver refused the
+              workload or ran out of memory, and the browser is rebuilding it.
+              If this repeats, close other WebGL tabs or lower the cloud
+              point count — the physics data is unaffected, only the drawing.
+            </div>
           </div>
         )}
         <div className="canvas-overlay">

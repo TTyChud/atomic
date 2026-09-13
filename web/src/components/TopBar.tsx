@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { currentEngineMode, engine, type EngineBoot } from "../engine/engine";
 import type { ViewMode } from "../lib/urlState";
 import { isNarrow, useViewport } from "../lib/viewport";
+import { VIEW_HINTS } from "../lib/viewHints";
 import { useAppStore } from "../state/store";
 import { Shortcuts } from "./Shortcuts";
 import { TourMenu } from "./TourMenu";
@@ -41,6 +43,39 @@ function CopyLink({ narrow }: { narrow: boolean }) {
   );
 }
 
+const ENGINE_LABEL: Record<EngineBoot["state"], string> = {
+  idle: "device engine",
+  loading: "device engine · loading",
+  ready: "device engine",
+  error: "device engine · error",
+};
+
+/** Says where the physics is running — the honesty principle, applied to the runtime. */
+function EngineBadge() {
+  const [boot, setBoot] = useState<EngineBoot>(engine.current);
+  useEffect(() => engine.onChange(setBoot), []);
+  if (currentEngineMode() === "remote") return null;
+  const label = ENGINE_LABEL[boot.state];
+  const title =
+    boot.state === "ready"
+      ? `Physics computed on this device by atomic ${boot.version} (Python via WebAssembly). No server, nothing stored.`
+      : boot.state === "loading"
+        ? "Booting the Python runtime on this device…"
+        : boot.state === "error"
+          ? "The on-device engine failed to start; reload to retry."
+          : "The physics engine will run on this device.";
+  return (
+    <span
+      className={
+        boot.state === "ready" ? "engine-badge engine-ready" : "engine-badge"
+      }
+      title={title}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function TopBar() {
   const { view, setView, n, l, m, system } = useAppStore();
   const { width } = useViewport();
@@ -55,12 +90,14 @@ export function TopBar() {
           <button
             key={t.value}
             className={view === t.value ? "tab tab-active" : "tab"}
+            title={VIEW_HINTS[t.value]?.what}
             onClick={() => setView(t.value)}
           >
             {t.label}
           </button>
         ))}
       </nav>
+      <EngineBadge />
       <CopyLink narrow={isNarrow(width)} />
       <Shortcuts />
       <TourMenu />

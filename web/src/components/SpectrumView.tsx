@@ -22,7 +22,6 @@ import { useAppStore } from "../state/store";
 import { Notation, mathTspans } from "../lib/mathText";
 import { Badge } from "./Badge";
 import { AbsorptionView } from "./AbsorptionView";
-import { CurveOfGrowthView } from "./CurveOfGrowthView";
 import { Disclosure } from "./Disclosure";
 import { ControlGroup, Slider, Toggle } from "./Field";
 import { HoverReadout, usePlotHover } from "./PlotHover";
@@ -271,7 +270,6 @@ export function SpectrumView() {
     thermal, temperatureK, logNe, setThermal, setTemperatureK, setLogNe,
     profile, logResolvingPower, profileZoom,
     setProfile, setLogResolvingPower, setProfileZoom,
-    showCurveOfGrowth, curveOfGrowth, setShowCurveOfGrowth, loadCurveOfGrowth,
     absorption, logColumn, absorptionData, setAbsorption, setLogColumn,
     loadAbsorption,
   } = useAppStore();
@@ -306,12 +304,6 @@ export function SpectrumView() {
     }
     setProfileZoom(zoomWindow(best.wavelength_nm, best.fwhm_nm));
   }, [profile, profileZoom, keepFull, prof0, lines0, setProfileZoom]);
-  const zoomCentre = profileZoom ? (profileZoom[0] + profileZoom[1]) / 2 : null;
-  useEffect(() => {
-    if (!showCurveOfGrowth || zoomCentre === null) return;
-    void loadCurveOfGrowth(zoomCentre);
-  }, [showCurveOfGrowth, zoomCentre, temperatureK, logNe, logResolvingPower,
-      loadCurveOfGrowth]);
   useEffect(() => {
     if (!absorption || !thermal) return;
     void loadAbsorption();
@@ -803,28 +795,6 @@ export function SpectrumView() {
             setProfileZoom(null);
           }}
         />
-      )}
-
-      {prof && profileZoom && (
-        <div data-tour="curve-of-growth-toggle">
-          <ControlGroup
-            title="What happens with more gas in the way"
-            tone={showCurveOfGrowth ? "active" : "plain"}
-          >
-            <Toggle
-              label="Curve of growth"
-              checked={showCurveOfGrowth}
-              onChange={setShowCurveOfGrowth}
-              why="A line cannot keep getting stronger forever. Pile up enough atoms and the core saturates, and only the wings keep growing."
-            />
-            {showCurveOfGrowth && !curveOfGrowth && (
-              <p className="hint-block">Computing the curve of growth…</p>
-            )}
-          </ControlGroup>
-        </div>
-      )}
-      {prof && profileZoom && showCurveOfGrowth && curveOfGrowth && (
-        <CurveOfGrowthView cog={curveOfGrowth} width={W} />
       )}
 
       <ControlGroup
