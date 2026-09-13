@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { num } from "./client";
+import { num, thumbnailUrl } from "./client";
+
+describe("thumbnailUrl", () => {
+  it("leaves the real-physics defaults off the query", () => {
+    expect(thumbnailUrl(2, 1, 0, "he+", "complex", 96)).toBe(
+      "/api/thumbnail/2/1/0?system=he%2B&basis=complex&size=96",
+    );
+  });
+
+  it("carries the model, config and counterfactual flags for Hartree-Fock", () => {
+    const url = thumbnailUrl(2, 1, 0, "c", "complex", 96, {
+      model: "hf", config: "1s2 2s2 2p2", exchange: false, pauli: true,
+    });
+    expect(url).toContain("model=hf");
+    expect(url).toContain("config=1s2%202s2%202p2");
+    expect(url).toContain("exchange=false");
+    expect(url).not.toContain("pauli=false");
+  });
+});
 
 describe("num", () => {
   it("leaves ordinary numbers alone", () => {

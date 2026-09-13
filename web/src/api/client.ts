@@ -322,8 +322,21 @@ export function thumbnailUrl(
   system: string,
   basis: Basis,
   size: number,
+  params?: {
+    model?: "gsz" | "hf";
+    config?: string | null;
+    exchange?: boolean;
+    pauli?: boolean;
+  },
 ): string {
-  return `/api/thumbnail/${n}/${l}/${m}?system=${key(system)}&basis=${basis}&size=${size}`;
+  const model = params?.model === "hf" ? "&model=hf" : "";
+  const cfg = params?.config ? `&config=${encodeURIComponent(params.config)}` : "";
+  const x = params?.exchange === false ? "&exchange=false" : "";
+  const p = params?.pauli === false ? "&pauli=false" : "";
+  return (
+    `/api/thumbnail/${n}/${l}/${m}?system=${key(system)}&basis=${basis}&size=${size}` +
+    `${model}${cfg}${x}${p}`
+  );
 }
 
 export function decodeIndices(buffer: ArrayBuffer): Uint32Array {
