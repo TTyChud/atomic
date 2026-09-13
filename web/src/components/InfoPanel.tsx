@@ -40,8 +40,7 @@ export function InfoPanel() {
           </div>
         </dl>
         <p className="panel-hint">
-          A many-electron atom has no closed-form state to read here. The
-          Energy levels and Radial views carry the solved quantities.
+          No closed-form state; see Energy levels and Radial.
         </p>
       </div>
     );

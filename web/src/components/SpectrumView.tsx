@@ -535,8 +535,6 @@ export function SpectrumView() {
             wavelength [nm] (log)
           </text>
           <text x={W - M.right} y={16} textAnchor="end" className="tick">
-            {
-}
             {compact
               ? "bars: computed · dots: NIST"
               : "bars: computed · dots on the axis: measured by NIST"}
@@ -627,8 +625,6 @@ export function SpectrumView() {
               ))}
               </g>
               <text x={M.left} y={12} className="tick">
-                {
-}
                 {mathTspans(
                   compact
                     ? `(λ_computed − λ_NIST)/λ_NIST · band ±${tol.toExponential(0)}`

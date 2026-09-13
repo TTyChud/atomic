@@ -11,7 +11,7 @@ import { ShowPhysics } from "./ShowPhysics";
 
 const PRESET_SYSTEMS = ["h", "d", "t", "mu-h", "ps", "he+"];
 
-export const COUNT_CHOICES = [10000, 100000, 500000];
+export const COUNT_CHOICES = [10000, 100000, 300000];
 
 export const VIEW_OPTIONS: { value: ViewMode; label: string }[] = [
   { value: "cloud", label: "cloud" },
@@ -65,33 +65,35 @@ export function Controls() {
   return (
     <div className="controls">
       <ControlGroup title="State">
-        <Select
-          label="n"
-          value={String(n)}
-          options={[1, 2, 3, 4, 5, 6].map((v) => ({ value: String(v), label: `n = ${v}` }))}
-          onChange={(v) => pick(Number(v), l, m)}
-        />
-        <div data-tour="l-picker">
+        <div className="state-grid">
           <Select
-            label="l"
-            value={String(l)}
-            options={Array.from({ length: n }, (_, v) => ({
-              value: String(v),
-              label: `l = ${v}`,
-              disabled: !subshellAvailable(hfLevels, model, n, v),
+            label="n"
+            value={String(n)}
+            options={[1, 2, 3, 4, 5, 6].map((v) => ({ value: String(v), label: `n = ${v}` }))}
+            onChange={(v) => pick(Number(v), l, m)}
+          />
+          <div data-tour="l-picker">
+            <Select
+              label="l"
+              value={String(l)}
+              options={Array.from({ length: n }, (_, v) => ({
+                value: String(v),
+                label: `l = ${v}`,
+                disabled: !subshellAvailable(hfLevels, model, n, v),
+              }))}
+              onChange={(v) => pick(n, Number(v), m)}
+            />
+          </div>
+          <Select
+            label="m"
+            value={String(m)}
+            options={Array.from({ length: 2 * l + 1 }, (_, i) => ({
+              value: String(i - l),
+              label: `m = ${i - l}`,
             }))}
-            onChange={(v) => pick(n, Number(v), m)}
+            onChange={(v) => pick(n, l, Number(v))}
           />
         </div>
-        <Select
-          label="m"
-          value={String(m)}
-          options={Array.from({ length: 2 * l + 1 }, (_, i) => ({
-            value: String(i - l),
-            label: `m = ${i - l}`,
-          }))}
-          onChange={(v) => pick(n, l, Number(v))}
-        />
         <div data-tour="system-picker">
           <Select label="system" value={system} options={systemOptions} onChange={setSystem} />
         </div>
@@ -201,8 +203,6 @@ export function Controls() {
         </div>
       </ControlGroup>
       <ControlGroup title="View">
-        {
-}
         {!narrow && (
           <div data-tour="view-list">
             <Choice<ViewMode>
@@ -238,8 +238,6 @@ export function Controls() {
             { value: "psi", label: "psi" },
           ]}
         />
-        {
-}
         {narrow && (
           <p className="panel-hint">
             A phone opens at {COUNT_CHOICES[0].toLocaleString()} draws. The larger
@@ -252,9 +250,9 @@ export function Controls() {
           label="cloud points"
           readout={count.toLocaleString()}
           min={1000}
-          max={1000000}
+          max={300000}
           step={1000}
-          value={COUNT_CHOICES.reduce((a, b) => (Math.abs(b - count) < Math.abs(a - count) ? b : a))}
+          value={count}
           onChange={setCount}
         />
         <div data-tour="nucleus-picker">

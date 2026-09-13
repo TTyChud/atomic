@@ -144,11 +144,7 @@ export function CloudView() {
         badge={meta ? <Badge provenance={meta.provenance} /> : undefined}
       />
       <div className="stage-3d">
-        {
-}
         <Canvas camera={{ fov: 50 }} dpr={[1, 2]}>
-          {
-}
           <color attach="background" args={["#080c0e"]} />
           <CameraRig distance={distance} />
           <AxisTriad distance={distance} />
@@ -164,8 +160,6 @@ export function CloudView() {
           )}
           {showSurface && iso && surfaceColors && (
             <>
-              {
-}
               <ambientLight intensity={0.65} />
               <directionalLight position={[1, 1, 1]} intensity={1.1} />
               <IsoSurface
@@ -194,8 +188,6 @@ export function CloudView() {
           <Badge provenance={RENDER_LIBERTIES} />
           {nucleus?.kind === "marker" && <Badge provenance={NUCLEUS_MARKER_LIBERTY} />}
           {caption && <span className="nucleus-caption">{caption}</span>}
-          {
-}
           <span className="ghost-readout">
             axes ±{formatArm(axisArmLength(distance))} a{"₀"} · z is the
             quantization axis

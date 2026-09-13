@@ -203,16 +203,30 @@ export function ScreenedLadder({ levels, width: W = 680 }: {
   const y = scaleLinear([eMin, 0], [H - 40, 24]);
   const rungX1 = 90;
   const rungX2 = 340;
+  const labelled = new Set<string>();
+  const placed: number[] = [];
+  for (const o of [...levels.orbitals].sort((a, b) => {
+    const fa = a.occupancy > 0 ? 0 : 1;
+    const fb = b.occupancy > 0 ? 0 : 1;
+    return fa !== fb ? fa - fb : a.energy_ev.value - b.energy_ev.value;
+  })) {
+    const yr = y(o.energy_ev.value);
+    if (placed.every((p) => Math.abs(p - yr) >= 13)) {
+      placed.push(yr);
+      labelled.add(`${o.n}-${o.l}`);
+    }
+  }
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ minWidth: W }} role="img" className="levels-svg">
       <line x1={rungX1} x2={rungX2} y1={y(0)} y2={y(0)} className="zero" />
-      <text x={rungX2 + 30} y={y(0)} dy="0.32em" className="tick">
+      <text x={rungX2 + 30} y={Math.max(11, y(0) - 13)} dy="0.32em" className="tick">
         0: ionization limit
       </text>
       {levels.orbitals.map((o) => {
         const yr = y(o.energy_ev.value);
         const filled = o.occupancy > 0;
+        const show = labelled.has(`${o.n}-${o.l}`);
         return (
           <g key={`${o.n}-${o.l}`}>
             <line
@@ -222,17 +236,21 @@ export function ScreenedLadder({ levels, width: W = 680 }: {
               strokeDasharray={filled ? undefined : "4 4"}
               opacity={filled ? 1 : 0.5}
             />
-            <text
-              x={rungX1 - 32} y={yr} dy="0.32em"
-              textAnchor="end" className="tick"
-            >
-              {o.label}
-              {filled ? <tspan dy="-0.5em">{o.occupancy}</tspan> : ""}
-            </text>
-            <text x={rungX2 + 30} y={yr} dy="0.32em" className="tick">
-              {o.energy_ev.value.toFixed(2)} eV
-              {filled ? "" : " · virtual"}
-            </text>
+            {show && (
+              <>
+                <text
+                  x={rungX1 - 32} y={yr} dy="0.32em"
+                  textAnchor="end" className="tick"
+                >
+                  {o.label}
+                  {filled ? <tspan dy="-0.5em">{o.occupancy}</tspan> : ""}
+                </text>
+                <text x={rungX2 + 30} y={yr} dy="0.32em" className="tick">
+                  {o.energy_ev.value.toFixed(2)} eV
+                  {filled ? "" : " · virtual"}
+                </text>
+              </>
+            )}
           </g>
         );
       })}

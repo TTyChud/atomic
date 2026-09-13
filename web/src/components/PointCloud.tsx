@@ -17,16 +17,12 @@ export function PointCloud({ positions, pointSize, colors }: Props) {
       g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     }
     return g;
-  }, [positions]);
+  }, [positions, colors]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
     <points geometry={geometry} rotation={PHYSICS_TO_SCREEN}>
-      {
-}
-      {
-}
       <pointsMaterial
         key={useVertexColors ? "vertex-colors" : "solid"}
         size={pointSize}
