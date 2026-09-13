@@ -121,7 +121,6 @@ from atomic.transfer import absorb, curve_of_growth, default_columns
 
 _DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
-
 def _allowed_origins() -> list[str]:
     """CORS allow-list: dev origins plus anything configured for split deploys.
 
@@ -138,11 +137,9 @@ def _allowed_origins() -> list[str]:
 
 logger = logging.getLogger(__name__)
 
-
 def _configure_logging() -> None:
     if not logging.getLogger().handlers:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(message)s")
-
 
 def _web_dist() -> Path:
     override = os.environ.get("ATOMIC_WEB_DIST")
@@ -150,18 +147,15 @@ def _web_dist() -> Path:
         return Path(override)
     return Path(__file__).resolve().parents[3] / "web" / "dist"
 
-
 def _job_worker_count() -> int:
     override = os.environ.get("ATOMIC_JOB_WORKERS")
     if override:
         return max(1, int(override))
     return max(2, min(4, os.cpu_count() or 2))
 
-
 async def _lifespan(app: FastAPI):
     yield
     app.state.executor.shutdown(wait=False, cancel_futures=True)
-
 
 def _build_rate_limiter() -> TokenBucket | None:
     if os.environ.get("ATOMIC_RATE_LIMIT", "").lower() in ("off", "0", "false"):
@@ -170,7 +164,6 @@ def _build_rate_limiter() -> TokenBucket | None:
         capacity=int(os.environ.get("ATOMIC_RATE_LIMIT_BURST", DEFAULT_CAPACITY)),
         period=float(os.environ.get("ATOMIC_RATE_LIMIT_PERIOD", DEFAULT_PERIOD)),
     )
-
 
 def _client_key(request, header: str | None) -> str:
     if header:
@@ -181,7 +174,6 @@ def _client_key(request, header: str | None) -> str:
                 return candidate
     return request.client.host if request.client else "unknown"
 
-
 class StarkSublevelModel(BaseModel):
     n1: int
     n2: int
@@ -190,14 +182,12 @@ class StarkSublevelModel(BaseModel):
     energy: QuantityModel
     energy_ev: QuantityModel
 
-
 class GrossLevelModel(BaseModel):
     n: int
     degeneracy: int
     energy: QuantityModel
     energy_ev: QuantityModel
     sublevels: list[StarkSublevelModel] | None = None
-
 
 class ZeemanSublevelModel(BaseModel):
     m_j: float
@@ -206,7 +196,6 @@ class ZeemanSublevelModel(BaseModel):
     high_field_label: str
     energy: QuantityModel
     energy_ev: QuantityModel
-
 
 class FineLevelModel(BaseModel):
     n: int
@@ -218,14 +207,12 @@ class FineLevelModel(BaseModel):
     shift_ev: QuantityModel
     sublevels: list[ZeemanSublevelModel] | None = None
 
-
 class HyperfineLevelModel(BaseModel):
     F: float
     energy: QuantityModel
     energy_ev: QuantityModel
     shift: QuantityModel
     shift_ev: QuantityModel
-
 
 class HyperfineShellModel(BaseModel):
     n: int
@@ -237,7 +224,6 @@ class HyperfineShellModel(BaseModel):
     levels: list[HyperfineLevelModel] = []
     note: str | None = None
     reason: str | None = None
-
 
 class LevelsResponse(BaseModel):
     system: SystemModel
@@ -252,7 +238,6 @@ class LevelsResponse(BaseModel):
     hyperfine: bool = False
     hyperfine_shells: list[HyperfineShellModel] | None = None
 
-
 class StateResponse(BaseModel):
     n: int
     l: int
@@ -266,10 +251,8 @@ class StateResponse(BaseModel):
     radial_nodes: int
     angular_nodes: int
 
-
 class SystemsResponse(BaseModel):
     systems: list[SystemModel]
-
 
 class RadialResponse(BaseModel):
     n: int
@@ -279,7 +262,6 @@ class RadialResponse(BaseModel):
     radial_probability: FieldModel
     total_density: FieldModel | None = None
     density_comparison: DensityComparisonModel | None = None
-
 
 class SpectrumResponse(BaseModel):
     system: SystemModel
@@ -293,7 +275,6 @@ class SpectrumResponse(BaseModel):
     thermal: ThermalModel | None = None
     profile: ProfileModel | None = None
     profile_note: str | None = None
-
 
 class ManyElectronRequest(BaseModel):
     model: Literal["gsz", "hf"] = "gsz"
@@ -312,7 +293,6 @@ class ManyElectronRequest(BaseModel):
             )
         return self
 
-
 class SampleRequest(ManyElectronRequest):
     n: int
     l: int
@@ -322,13 +302,11 @@ class SampleRequest(ManyElectronRequest):
     basis: Literal["complex", "real"] = "complex"
     system: str = "h"
 
-
 class JobModel(BaseModel):
     id: str
     status: str
     progress: float
     error: str | None
-
 
 class SampleMetaModel(BaseModel):
     kind: Literal["sample"] = "sample"
@@ -345,7 +323,6 @@ class SampleMetaModel(BaseModel):
     provenance: ProvenanceModel
     channels: list[ChannelModel]
 
-
 class PlaneRequest(ManyElectronRequest):
     n: int
     l: int
@@ -355,19 +332,16 @@ class PlaneRequest(ManyElectronRequest):
     system: str = "h"
     resolution: int = 256
 
-
 @dataclasses.dataclass(frozen=True)
 class SampleJobResult:
     cloud: SampleCloud
     psi: WavefunctionValues
-
 
 @dataclasses.dataclass(frozen=True)
 class HFJobResult:
     result: HFResult
     exchange_energy: Quantity | None
     collapse: PauliCollapse | None
-
 
 class HFRequest(BaseModel):
 
@@ -388,10 +362,8 @@ class HFRequest(BaseModel):
             )
         return self
 
-
 _HF_MAX_N = 3
 _HF_MAX_Z = 36
-
 
 def _parse_config_or_422(text: str, pauli: bool = True):
     try:
@@ -400,7 +372,6 @@ def _parse_config_or_422(text: str, pauli: bool = True):
     except (ValueError, IndexError) as exc:
         raise HTTPException(status_code=422, detail=f"bad config: {exc}") from exc
     return cfg
-
 
 def _validate_hf_request(z: int, n_electrons: int, config, pauli: bool = True) -> None:
     if not 1 <= z <= _HF_MAX_Z:
@@ -444,10 +415,8 @@ def _validate_hf_request(z: int, n_electrons: int, config, pauli: bool = True) -
             ),
         )
 
-
 def _hf_channel(n: int, l: int) -> str:
     return f"P_{n}{SUBSHELL_LABELS[l]}"
-
 
 def _many_electron_target(
     system: str, config: str | None, pauli: bool
@@ -472,7 +441,6 @@ def _many_electron_target(
     _validate_hf_request(element.z, n_electrons, cfg, pauli)
     return element.z, n_electrons, cfg
 
-
 def _hf_view_target(req) -> tuple[int, int, Configuration]:
     z, n_electrons, config = _many_electron_target(
         req.system, req.config, req.pauli
@@ -495,13 +463,11 @@ def _hf_view_target(req) -> tuple[int, int, Configuration]:
         )
     return z, n_electrons, config
 
-
 def _hf_symbol(z: int) -> str | None:
     try:
         return element_by_z(z).symbol
     except KeyError:
         return None
-
 
 def _pauli_collapse_model(collapse: PauliCollapse) -> PauliCollapseModel:
     return PauliCollapseModel(
@@ -521,7 +487,6 @@ def _pauli_collapse_model(collapse: PauliCollapse) -> PauliCollapseModel:
             _to_ev(collapse.variational_energy)
         ),
     )
-
 
 def _hf_result_model(
     result: HFResult,
@@ -583,7 +548,6 @@ def _hf_result_model(
         ],
     )
 
-
 class PlaneMetaModel(BaseModel):
     kind: Literal["plane"] = "plane"
     resolution: int
@@ -602,7 +566,6 @@ class PlaneMetaModel(BaseModel):
     model: str = "hydrogenic"
     provenance: ProvenanceModel
 
-
 class IsoRequest(ManyElectronRequest):
     n: int
     l: int
@@ -619,7 +582,6 @@ class IsoRequest(ManyElectronRequest):
                 f"resolution must be one of {GRID_SIZES}, got {self.resolution}"
             )
         return self
-
 
 class IsoMetaModel(BaseModel):
     kind: Literal["isosurface"] = "isosurface"
@@ -647,7 +609,6 @@ class IsoMetaModel(BaseModel):
     label: str
     provenance: ProvenanceModel
 
-
 def _validate_state(n: int, l: int, m: int) -> None:
     try:
         validate_quantum_numbers(n, l)
@@ -655,7 +616,6 @@ def _validate_state(n: int, l: int, m: int) -> None:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     if abs(m) > l:
         raise HTTPException(status_code=422, detail=f"|m| must be <= l, got m={m}, l={l}")
-
 
 def _resolve_system(key: str):
     try:
@@ -671,7 +631,6 @@ def _resolve_system(key: str):
         raise HTTPException(
             status_code=404, detail=f"unknown system {key!r}; available: {available}"
         ) from None
-
 
 def _screened_element(key: str):
     element = atom_for_key(key)
@@ -690,7 +649,6 @@ def _screened_element(key: str):
         )
     return element
 
-
 def _to_ev(q: Quantity) -> Quantity:
     return Quantity(
         value=q.value * HARTREE_EV,
@@ -702,7 +660,6 @@ def _to_ev(q: Quantity) -> Quantity:
         ),
     )
 
-
 def _to_pm(q: Quantity) -> Quantity:
     return Quantity(
         value=q.value * BOHR_RADIUS_PM,
@@ -713,7 +670,6 @@ def _to_pm(q: Quantity) -> Quantity:
             method=q.provenance.method + "; converted to pm via CODATA Bohr radius",
         ),
     )
-
 
 def _hyperfine_shell_model(rep) -> HyperfineShellModel:
     return HyperfineShellModel(
@@ -736,10 +692,8 @@ def _hyperfine_shell_model(rep) -> HyperfineShellModel:
         note=rep.note,
     )
 
-
 def _job_model(job: Job) -> JobModel:
     return JobModel(id=job.id, status=job.status.value, progress=job.progress, error=job.error)
-
 
 def _finished_result(jobs: JobStore, job_id: str):
     job = jobs.get(job_id)
@@ -748,7 +702,6 @@ def _finished_result(jobs: JobStore, job_id: str):
     if job.status is not JobStatus.DONE:
         raise HTTPException(status_code=409, detail=f"job is {job.status.value}, not done")
     return job.result
-
 
 def create_app() -> FastAPI:
     _configure_logging()

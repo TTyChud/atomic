@@ -20,14 +20,12 @@ from atomic.provenance import Fidelity, Field, Provenance, Quantity
 
 _SCREENED_EVAL_POINTS = 4096
 
-
 @dataclass(frozen=True)
 class Orbital:
     n: int
     l: int
     occupancy: int
     energy: Quantity
-
 
 @dataclass(frozen=True)
 class ScreenedAtomResult:
@@ -40,11 +38,9 @@ class ScreenedAtomResult:
     total_energy: Quantity
     provenance: Provenance
 
-
 def _r_max(z: int, n_electrons: int, n_top: int) -> float:
     z_net = z - n_electrons + 1
     return 40.0 * (n_top + 1) ** 2 / z_net
-
 
 def _solve_energies(z: int, n_electrons: int, l: int, n_states: int) -> tuple[Quantity, ...]:
     potential = screened_potential(z, n_electrons)
@@ -64,7 +60,6 @@ def _solve_energies(z: int, n_electrons: int, l: int, n_states: int) -> tuple[Qu
         )
         out.append(dataclasses.replace(e, provenance=merged))
     return tuple(out)
-
 
 def solve_screened_atom(
     z: int, n_electrons: int, config: Configuration,
@@ -101,7 +96,6 @@ def solve_screened_atom(
         provenance=screening_provenance(z, n_electrons),
     )
 
-
 def valence_ionization_energy(result: ScreenedAtomResult) -> Quantity:
     occupied = [o for o in result.orbitals if o.occupancy > 0]
     if not occupied:
@@ -115,7 +109,6 @@ def valence_ionization_energy(result: ScreenedAtomResult) -> Quantity:
         ),
     )
     return Quantity(-valence.energy.value, "hartree", "IE_valence", prov)
-
 
 def screened_radial(
     z: int, n_electrons: int, n: int, l: int, points: int = 400,
@@ -149,11 +142,9 @@ def screened_radial(
                     grid_unit="bohr", label=f"P_{n},{l}(r) = r^2 R^2", provenance=prov)
     return r_field, p_field
 
-
 def _density_grid(z: int, n_electrons: int, n_top: int) -> tuple[float, int]:
     r_max = 4.0 * (n_top + 1) ** 2 / (z - n_electrons + 1)
     return r_max, int(np.ceil(r_max * 40.0 * z))
-
 
 def screened_total_radial_density(
     z: int, n_electrons: int, config: Configuration | None = None,
@@ -215,9 +206,7 @@ def screened_total_radial_density(
         ),
     )
 
-
 _DIPOLE_CHANNEL_CACHE = 16
-
 
 @lru_cache(maxsize=_DIPOLE_CHANNEL_CACHE)
 def _dipole_channel(
@@ -227,7 +216,6 @@ def _dipole_channel(
         screened_potential(z, n_electrons), l=l, mu_ratio=1.0,
         r_max=r_max, n_points=n_points, n_states=n_states,
     )
-
 
 def screened_dipole_integral(
     z: int, n_electrons: int, n_a: int, l_a: int, n_b: int, l_b: int,
@@ -269,7 +257,6 @@ def screened_dipole_integral(
             refinement=model.refinement,
         ),
     )
-
 
 def evaluate_screened_state(
     z: int,

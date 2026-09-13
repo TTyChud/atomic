@@ -20,7 +20,6 @@ def test_real_universe_is_exact_and_unchanged():
     assert r.bohr_radius_pm.quantity.value == pytest.approx(52.9, rel=1e-2)
     assert r.hartree_ev.quantity.value == pytest.approx(27.211, rel=1e-4)
 
-
 def test_degeneracy_pair_changes_nothing_observable():
     r = analyze_constants(e=2.0, eps0=4.0)
     assert r.altered is True
@@ -29,20 +28,17 @@ def test_degeneracy_pair_changes_nothing_observable():
     assert r.hartree_ev.changed is False
     assert r.alpha.quantity.provenance.fidelity is Fidelity.COUNTERFACTUAL
 
-
 def test_electron_mass_scales_size_and_binding():
     r = analyze_constants(m_e=0.5)
     assert r.bohr_radius_pm.ratio == pytest.approx(2.0)
     assert r.hartree_ev.ratio == pytest.approx(0.5)
     assert r.alpha.changed is False
 
-
 def test_altered_provenance_names_the_multipliers():
     r = analyze_constants(e=2.0, eps0=4.0)
     method = r.alpha.quantity.provenance.method.lower()
     assert "altered" in method
     assert "e" in method and "eps0" in method
-
 
 def test_derived_alpha_matches_fundamental_constants():
     real = FundamentalConstants.codata()

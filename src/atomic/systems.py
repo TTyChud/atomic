@@ -14,17 +14,13 @@ class System:
     m_over_M: float
     description: str
 
-
     nuclear_radius: Quantity | None = None
-
 
 def _mass_ratio(constant_name: str) -> tuple[float, float]:
     value, _unit, unc = _sc.physical_constants[constant_name]
     return value, unc
 
-
 _A0_M = _sc.physical_constants["Bohr radius"][0]
-
 
 def _radius_quantity(
     r_m: float, unc_m: float, nucleus: str, source: str
@@ -44,19 +40,16 @@ def _radius_quantity(
         ),
     )
 
-
 def _codata_radius(constant_name: str, nucleus: str) -> Quantity:
     r_m, _unit, unc_m = _sc.physical_constants[constant_name]
     return _radius_quantity(
         r_m, unc_m, nucleus, f"CODATA (scipy.constants: {constant_name})"
     )
 
-
 _TRITON_RADIUS = _radius_quantity(
     1.7591e-15, 0.0363e-15, "triton",
     "Angeli & Marinova (2013), At. Data Nucl. Data Tables 99, 69",
 )
-
 
 def _codata_system(
     key: str, name: str, Z: int, nucleus_constant: str, description: str,
@@ -95,7 +88,6 @@ def _codata_system(
         nuclear_radius=nuclear_radius,
     )
 
-
 _POSITRONIUM = System(
     key="ps",
     name="Positronium",
@@ -115,7 +107,6 @@ _POSITRONIUM = System(
     description="Electron bound to a positron; recoil is O(1), fine structure "
     "unreliable at alpha^2 (error estimate says so).",
 )
-
 
 _SYSTEMS: tuple[System, ...] = (
     _codata_system("h", "Hydrogen", 1, "proton-electron mass ratio",
@@ -138,17 +129,14 @@ _SYSTEMS: tuple[System, ...] = (
                        "alpha particle rms charge radius", "alpha particle")),
 )
 
-
 def list_systems() -> tuple[System, ...]:
     return _SYSTEMS
-
 
 def get_system(key: str) -> System:
     for s in _SYSTEMS:
         if s.key == key:
             return s
     raise KeyError(f"unknown system {key!r}; available: {[s.key for s in _SYSTEMS]}")
-
 
 def emitter_mass(system: System) -> Quantity:
     x = system.m_over_M
@@ -192,7 +180,6 @@ def emitter_mass(system: System) -> Quantity:
         ),
     )
 
-
 def element_emitter_mass(element) -> Quantity:
     return Quantity(
         value=element.mass_u * _sc.physical_constants["atomic mass constant"][0],
@@ -213,7 +200,6 @@ def element_emitter_mass(element) -> Quantity:
             ),
         ),
     )
-
 
 def hydrogen_like(Z: int, mu_ratio: float = 1.0) -> System:
     if Z < 1:

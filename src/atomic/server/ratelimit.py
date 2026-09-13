@@ -7,7 +7,6 @@ DEFAULT_CAPACITY = 80
 DEFAULT_PERIOD = 240.0
 DEFAULT_MAX_CLIENTS = 4096
 
-
 class TokenBucket:
 
     def __init__(

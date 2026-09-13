@@ -40,7 +40,6 @@ _REFERENCE_FILES = {
 
 _DEFAULT_TOL = {False: 3e-5, True: 1e-5}
 
-
 @dataclass(frozen=True)
 class SpectralLine:
     n_upper: int
@@ -56,20 +55,16 @@ class SpectralLine:
     emissivity: Quantity | None = None
     lower_fraction: Quantity | None = None
 
-
 _L_LETTERS = "spdfghi"
-
 
 def orbital_label(n: int, l: int) -> str:
     return f"{n}{_L_LETTERS[l]}" if l < len(_L_LETTERS) else f"{n}(l={l})"
-
 
 def subshell_label(line: "SpectralLine") -> str:
     return (
         f"{orbital_label(line.n_upper, line.l_upper)}"
         f"->{orbital_label(line.n_lower, line.l_lower)}"
     )
-
 
 @dataclass(frozen=True)
 class LineList:
@@ -80,7 +75,6 @@ class LineList:
     provenance: Provenance
     intensity_note: str | None = None
     thermal: ThermalState | None = None
-
 
 def _strength_provenance(dipole: Quantity, formula: str, value: float) -> Provenance:
     rel = (
@@ -94,7 +88,6 @@ def _strength_provenance(dipole: Quantity, formula: str, value: float) -> Proven
         error_estimate=2.0 * rel * abs(value),
         refinement=dipole.provenance.refinement,
     )
-
 
 def _thermal_state(
     levels: tuple[Level, ...],
@@ -128,7 +121,6 @@ def _thermal_state(
         {k: f.value for k, f in zip(keys, fractions, strict=True)},
     )
 
-
 def _hydrogenic_thermal(levels: list, thermal: ThermalConditions):
     ground_h = min(e.value for _, _, _, e in levels)
     specs = tuple(
@@ -143,7 +135,6 @@ def _hydrogenic_thermal(levels: list, thermal: ThermalConditions):
     keys = tuple((n, l, j) for n, l, j, _ in levels)
     return _thermal_state(specs, keys, -ground_h * HARTREE_EV, thermal)
 
-
 def _levels(system: System, n_max: int, fine_structure: bool):
     for n in range(1, n_max + 1):
         for l in range(n):
@@ -156,7 +147,6 @@ def _levels(system: System, n_max: int, fine_structure: bool):
                     )
             else:
                 yield n, l, None, energy(n, Z=system.Z, mu_ratio=system.mu_ratio.value)
-
 
 def transition_lines(
     system: System,
@@ -249,7 +239,6 @@ def transition_lines(
         thermal=state,
     )
 
-
 def _screened_thermal(result, levels: list, thermal: ThermalConditions):
     ground_h = min(e.value for _, _, e in levels)
     specs = tuple(
@@ -273,7 +262,6 @@ def _screened_thermal(result, levels: list, thermal: ThermalConditions):
             "energies",
         ),
     )
-
 
 def screened_transition_lines(
     result, intensities: bool = False, thermal: ThermalConditions | None = None
@@ -363,13 +351,11 @@ def screened_transition_lines(
         ),
     )
 
-
 @dataclass(frozen=True)
 class ReferenceLine:
     wavelength_nm: float
     uncertainty_nm: float | None
     label: str
-
 
 @dataclass(frozen=True)
 class ReferenceData:
@@ -379,7 +365,6 @@ class ReferenceData:
     medium: str
     lines: tuple[ReferenceLine, ...]
 
-
 @dataclass(frozen=True)
 class LineComparison:
     line: SpectralLine
@@ -388,7 +373,6 @@ class LineComparison:
     delta_nm: float
     relative_error: float
     within_tolerance: bool
-
 
 def load_reference(system_key: str) -> ReferenceData | None:
     filename = _REFERENCE_FILES.get(system_key)
@@ -412,7 +396,6 @@ def load_reference(system_key: str) -> ReferenceData | None:
             for ln in raw["lines"]
         ),
     )
-
 
 def compare_lines(
     line_list: LineList,

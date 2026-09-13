@@ -22,10 +22,8 @@ CLAIM_KINDS: tuple[str, ...] = (
 
 _TOUR_DIR = Path(__file__).resolve().parents[2] / "web" / "src" / "tours"
 
-
 def load_tours() -> list[dict[str, Any]]:
     return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(_TOUR_DIR.glob("*.json"))]
-
 
 def iter_claims() -> Iterator[tuple[str, str, dict[str, Any]]]:
     inherit = (
@@ -47,22 +45,18 @@ def iter_claims() -> Iterator[tuple[str, str, dict[str, Any]]]:
                 merged.update(claim)
                 yield tour["id"], step["id"], merged
 
-
 def _system_of(claim: dict[str, Any]):
     return get_system(claim.get("system", "h"))
-
 
 def _energy_ev(claim: dict[str, Any]) -> float:
     system = _system_of(claim)
     q = energy(claim["n"], Z=system.Z, mu_ratio=system.mu_ratio.value)
     return q.value * HARTREE_EV
 
-
 def _mean_r_pm(claim: dict[str, Any]) -> float:
     system = _system_of(claim)
     q = mean_radius(claim["n"], claim["l"], Z=system.Z, mu_ratio=system.mu_ratio.value)
     return q.value * BOHR_RADIUS_PM
-
 
 def _wavelength_nm(claim: dict[str, Any]) -> float:
     system = _system_of(claim)
@@ -73,7 +67,6 @@ def _wavelength_nm(claim: dict[str, Any]) -> float:
         if line.n_upper == n_up and line.n_lower == n_lo:
             return line.wavelength.value
     raise ValueError(f"no {n_up} -> {n_lo} line in {system.key}")
-
 
 def _ionization_ev(claim: dict[str, Any]) -> float:
     key = claim.get("system", "h")
@@ -86,14 +79,12 @@ def _ionization_ev(claim: dict[str, Any]) -> float:
     result = solve_hartree_fock(z, z, config, exchange, pauli)
     return hf_valence_ionization_energy(result).value * HARTREE_EV
 
-
 _RESOLVERS = {
     "energy_eV": _energy_ev,
     "mean_r_pm": _mean_r_pm,
     "wavelength_nm": _wavelength_nm,
     "ionization_eV": _ionization_ev,
 }
-
 
 def resolve_claim(claim: dict[str, Any]) -> float:
     kind = claim.get("of")

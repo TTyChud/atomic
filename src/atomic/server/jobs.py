@@ -8,16 +8,13 @@ from typing import Any
 
 DEFAULT_MAX_JOBS = 16
 
-
 class JobStatus(Enum):
     PENDING = "pending"
     RUNNING = "running"
     DONE = "done"
     ERROR = "error"
 
-
 _FINISHED = (JobStatus.DONE, JobStatus.ERROR)
-
 
 @dataclass
 class Job:
@@ -26,7 +23,6 @@ class Job:
     progress: float = 0.0
     result: Any = None
     error: str | None = None
-
 
 class JobStore:
     def __init__(
@@ -38,7 +34,6 @@ class JobStore:
         self._lock = threading.Lock()
         self._max_jobs = max_jobs
 
-
         self._on_evict = on_evict
 
     def create(self) -> Job:
@@ -46,7 +41,6 @@ class JobStore:
         with self._lock:
             self._jobs[job.id] = job
             evicted = self._evict_locked()
-
 
         for job_id in evicted:
             if self._on_evict is not None:

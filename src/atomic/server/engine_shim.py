@@ -40,7 +40,6 @@ class InlineExecutor:
     def shutdown(self, wait: bool = True, cancel_futures: bool = False) -> None:
         pass
 
-
 def install_inline_threadpool() -> None:
     """Make anyio's ``to_thread.run_sync`` run its work inline.
 
@@ -58,7 +57,6 @@ def install_inline_threadpool() -> None:
         return func(*args)
 
     asyncio_backend.AsyncIOBackend.run_sync_in_worker_thread = staticmethod(run_sync_inline)  # type: ignore[method-assign]
-
 
 async def dispatch(
     app: Callable[..., object],

@@ -13,7 +13,6 @@ def test_parser_defaults():
     assert args.port is None
     assert args.no_browser is False
 
-
 def test_serve_invokes_uvicorn_on_loopback(monkeypatch):
     captured = {}
 
@@ -29,7 +28,6 @@ def test_serve_invokes_uvicorn_on_loopback(monkeypatch):
     assert captured == {"host": "127.0.0.1", "port": 8123}
     assert opened == ["http://127.0.0.1:8123"]
 
-
 def test_env_overrides_apply_when_flags_absent(monkeypatch):
     captured = {}
     monkeypatch.setattr(
@@ -41,7 +39,6 @@ def test_env_overrides_apply_when_flags_absent(monkeypatch):
 
     cli.main(["serve"])
     assert captured == {"host": "0.0.0.0", "port": 9000}
-
 
 def test_flags_take_precedence_over_env(monkeypatch):
     captured = {}
@@ -55,7 +52,6 @@ def test_flags_take_precedence_over_env(monkeypatch):
     cli.main(["serve", "--host", "127.0.0.1", "--port", "8001"])
     assert captured == {"host": "127.0.0.1", "port": 8001}
 
-
 def test_remote_bind_suppresses_browser(monkeypatch):
     """Serving on a non-loopback interface (a separate server) must not try to
     open a desktop browser — there is no desktop."""
@@ -65,7 +61,6 @@ def test_remote_bind_suppresses_browser(monkeypatch):
 
     cli.main(["serve", "--host", "0.0.0.0"])
     assert opened == []
-
 
 def test_invalid_port_env_falls_back_to_default(monkeypatch):
     captured = {}
@@ -77,7 +72,6 @@ def test_invalid_port_env_falls_back_to_default(monkeypatch):
 
     cli.main(["serve"])
     assert captured["port"] == 8000
-
 
 def test_platform_port_env_is_honored(monkeypatch):
     """PaaS convention (Render, Heroku, ...): the port arrives as PORT."""
@@ -92,7 +86,6 @@ def test_platform_port_env_is_honored(monkeypatch):
     cli.main(["serve"])
     assert captured["port"] == 10000
 
-
 def test_atomic_port_beats_platform_port(monkeypatch):
     captured = {}
     monkeypatch.setattr(
@@ -105,7 +98,6 @@ def test_atomic_port_beats_platform_port(monkeypatch):
     cli.main(["serve"])
     assert captured["port"] == 8080
 
-
 def test_no_browser_flag(monkeypatch):
     monkeypatch.setattr(uvicorn, "run", lambda app, host, port: None)
     opened = []
@@ -113,13 +105,12 @@ def test_no_browser_flag(monkeypatch):
     cli.main(["serve", "--no-browser"])
     assert opened == []
 
-
 def test_importing_the_cli_does_not_drag_in_the_server_stack():
     probe = (
         "import sys, atomic.cli; "
         "print(','.join(m for m in ('fastapi', 'uvicorn', 'matplotlib') "
         "if m in sys.modules))"
-    )  # matplotlib: gone from the runtime deps; the probe would catch a comeback
+    )
     done = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True
     )
@@ -127,7 +118,6 @@ def test_importing_the_cli_does_not_drag_in_the_server_stack():
     assert done.stdout.strip() == "", (
         f"atomic.cli eagerly imported: {done.stdout.strip()}"
     )
-
 
 @pytest.mark.parametrize("module", ["atomic", "atomic.cli"])
 def test_module_entry_point_runs_the_parser(module):
@@ -139,7 +129,6 @@ def test_module_entry_point_runs_the_parser(module):
     assert done.returncode == 0, done.stderr
     assert "usage: atomic" in done.stdout
     assert "serve" in done.stdout
-
 
 @pytest.mark.parametrize("module", ["atomic", "atomic.cli"])
 def test_module_entry_point_requires_a_subcommand(module):

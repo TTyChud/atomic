@@ -59,7 +59,6 @@ _INFERNO: tuple[int, ...] = (
 )
 # fmt: on
 
-
 def _chunk(kind: bytes, data: bytes) -> bytes:
     """One PNG chunk: length, type, payload, CRC-32."""
     return (
@@ -68,7 +67,6 @@ def _chunk(kind: bytes, data: bytes) -> bytes:
         + data
         + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
     )
-
 
 def inferno_rgb(values: list[list[float]]) -> bytes:
     """Map normalized [0, 1] values through inferno into RGB bytes.
@@ -86,7 +84,6 @@ def inferno_rgb(values: list[list[float]]) -> bytes:
             rgb += bytes((word >> 16, (word >> 8) & 0xFF, word & 0xFF))
     return bytes(rgb)
 
-
 def encode_png(rgb: bytes, width: int, height: int) -> bytes:
     """Encode truecolor RGB pixel bytes (from `inferno_rgb`) as a PNG."""
     stride = width * 3
@@ -97,7 +94,7 @@ def encode_png(rgb: bytes, width: int, height: int) -> bytes:
         )
     raw = b"".join(
         b"\x00" + rgb[y * stride : (y + 1) * stride] for y in range(height)
-    )  # filter 0 = None per scanline
+    )
     ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
     return b"".join(
         (

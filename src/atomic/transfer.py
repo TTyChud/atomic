@@ -37,7 +37,6 @@ _SLAB = (
 
 _SATURATED_PAD: float = 40.0
 
-
 @dataclass(frozen=True)
 class CurveOfGrowth:
 
@@ -51,7 +50,6 @@ class CurveOfGrowth:
     wavelength_nm: float
     oscillator_strength: float
     provenance: Provenance
-
 
 def cross_section(
     oscillator_strength: float,
@@ -69,16 +67,13 @@ def cross_section(
         * lam_m**2 / _sc.c
     )
 
-
 def optical_depth(sigma: np.ndarray, column_density_m2: float) -> np.ndarray:
     if column_density_m2 < 0.0:
         raise ValueError(f"column density must be >= 0, got {column_density_m2}")
     return column_density_m2 * np.asarray(sigma, dtype=float)
 
-
 def transmission(tau: np.ndarray) -> np.ndarray:
     return np.exp(-np.asarray(tau, dtype=float))
-
 
 def equivalent_width(tau: np.ndarray, grid_nm: np.ndarray) -> Quantity:
     absorbed = 1.0 - transmission(tau)
@@ -102,7 +97,6 @@ def equivalent_width(tau: np.ndarray, grid_nm: np.ndarray) -> Quantity:
         ),
     )
 
-
 def _thin_limit_width(
     oscillator_strength: float, wavelength_nm: float, column_density_m2: float
 ) -> float:
@@ -111,14 +105,12 @@ def _thin_limit_width(
         SIGMA_INTEGRAL / _sc.c * column_density_m2 * oscillator_strength * lam_m**2
     ) * 1e9
 
-
 def _classify(tau_centre: float, damping_parameter: float) -> str:
     if tau_centre < 1.0:
         return "linear"
     if damping_parameter * tau_centre > 1.0:
         return "damping"
     return "saturated"
-
 
 def default_columns(
     oscillator_strength: float,
@@ -139,7 +131,6 @@ def default_columns(
     n_thin = 1.0 / peak
     n_damp = n_thin / a if a > 0 else n_thin
     return np.geomspace(n_thin * 1e-5, n_damp * 1e4, points)
-
 
 def curve_of_growth(
     oscillator_strength: float,
@@ -221,7 +212,6 @@ def curve_of_growth(
         ),
     )
 
-
 @dataclass(frozen=True)
 class AbsorbingLine:
 
@@ -233,7 +223,6 @@ class AbsorbingLine:
     regime: str
     thin_width_nm: float
     fwhm_nm: float
-
 
 @dataclass(frozen=True)
 class AbsorptionSpectrum:
@@ -247,7 +236,6 @@ class AbsorptionSpectrum:
     saturation: Quantity
     blends: tuple[tuple[str, str], ...]
     flux_closure: float
-
 
 def _window_for(profiles, lo: float, hi: float) -> tuple[float, float]:
     from atomic.broadening import voigt
@@ -263,7 +251,6 @@ def _window_for(profiles, lo: float, hi: float) -> tuple[float, float]:
             reach = max(reach, math.sqrt(p.weight * p.gamma_nm / math.pi))
     pad = _SATURATED_PAD * reach
     return max(lo - pad, 0.5 * lo), hi + pad
-
 
 def absorb(
     line_list,
@@ -467,7 +454,6 @@ def absorb(
         blends=tuple(blends),
         flux_closure=synth.flux_closure,
     )
-
 
 def absorption_spectrum(
     grid_nm: np.ndarray,

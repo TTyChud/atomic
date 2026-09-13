@@ -7,7 +7,6 @@ from atomic.systems import get_system
 
 GAMMA = 0.5
 
-
 @lru_cache(maxsize=512)
 def render_thumbnail(
     n: int,

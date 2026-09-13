@@ -18,7 +18,6 @@ FidelityName = Literal[
     "exact", "numerical", "approximation", "counterfactual", "visual_liberty"
 ]
 
-
 class ProvenanceModel(BaseModel):
     fidelity: FidelityName
     method: str
@@ -36,13 +35,11 @@ class ProvenanceModel(BaseModel):
             refinement=p.refinement,
         )
 
-
 class ChannelModel(BaseModel):
     name: str
     dtype: str
     unit: str
     provenance: ProvenanceModel
-
 
 class QuantityModel(BaseModel):
     value: float
@@ -58,7 +55,6 @@ class QuantityModel(BaseModel):
             label=q.label,
             provenance=ProvenanceModel.from_provenance(q.provenance),
         )
-
 
 class FieldModel(BaseModel):
     values: list[float]
@@ -81,7 +77,6 @@ class FieldModel(BaseModel):
             provenance=ProvenanceModel.from_provenance(f.provenance),
         )
 
-
 class DerivedObservableModel(BaseModel):
     quantity: QuantityModel
     ratio: float
@@ -94,7 +89,6 @@ class DerivedObservableModel(BaseModel):
             ratio=o.ratio,
             changed=o.changed,
         )
-
 
 class ConstantsReportModel(BaseModel):
     alpha: DerivedObservableModel
@@ -111,7 +105,6 @@ class ConstantsReportModel(BaseModel):
             altered=r.altered,
         )
 
-
 class BohrOrbitModel(BaseModel):
     n: int
     radius_bohr: QuantityModel
@@ -124,7 +117,6 @@ class BohrOrbitModel(BaseModel):
             radius_bohr=QuantityModel.from_quantity(o.radius_bohr),
             radius_pm=QuantityModel.from_quantity(o.radius_pm),
         )
-
 
 class ClassicalGhostModel(BaseModel):
     n: int
@@ -149,7 +141,6 @@ class ClassicalGhostModel(BaseModel):
             orbit_count=QuantityModel.from_quantity(g.orbit_count),
         )
 
-
 def _to_fm(q: Quantity) -> Quantity:
     return Quantity(
         value=q.value * BOHR_RADIUS_FM,
@@ -164,7 +155,6 @@ def _to_fm(q: Quantity) -> Quantity:
             ),
         ),
     )
-
 
 class SystemModel(BaseModel):
     key: str
@@ -210,7 +200,6 @@ class SystemModel(BaseModel):
             has_gsz=has_gsz_parameters(element.z),
         )
 
-
 class ScreenedOrbitalModel(BaseModel):
     n: int
     l: int
@@ -219,7 +208,6 @@ class ScreenedOrbitalModel(BaseModel):
     energy: QuantityModel
     energy_ev: QuantityModel
 
-
 class ScreenedLevelsModel(BaseModel):
     system: SystemModel
     config: str
@@ -227,7 +215,6 @@ class ScreenedLevelsModel(BaseModel):
     orbitals: list[ScreenedOrbitalModel]
     total_energy: QuantityModel
     total_energy_ev: QuantityModel
-
 
 class HFOrbitalModel(BaseModel):
 
@@ -238,7 +225,6 @@ class HFOrbitalModel(BaseModel):
     energy: QuantityModel
     energy_ev: QuantityModel
     channel: str
-
 
 class PauliCollapseModel(BaseModel):
 
@@ -253,7 +239,6 @@ class PauliCollapseModel(BaseModel):
     variational_zeta: QuantityModel
     variational_energy: QuantityModel
     variational_energy_ev: QuantityModel
-
 
 class HFResultModel(BaseModel):
 
@@ -282,13 +267,11 @@ class HFResultModel(BaseModel):
     grid_points: int
     channels: list[ChannelModel]
 
-
 class ForceLawLevelModel(BaseModel):
     radial_index: int
     energy: QuantityModel
     energy_ev: QuantityModel
     trusted: bool = True
-
 
 class LineModel(BaseModel):
     n_upper: int
@@ -324,7 +307,6 @@ class LineModel(BaseModel):
             ),
         )
 
-
 class ThermalModel(BaseModel):
 
     temperature_k: float
@@ -341,7 +323,6 @@ class ThermalModel(BaseModel):
             partition_function=QuantityModel.from_quantity(state.partition_function),
         )
 
-
 class LineWidthModel(BaseModel):
 
     label: str
@@ -352,7 +333,6 @@ class LineWidthModel(BaseModel):
     gamma_nm: float
     fwhm_nm: float
     terms: list[str]
-
 
 class ProfileModel(BaseModel):
 
@@ -393,7 +373,6 @@ class ProfileModel(BaseModel):
             provenance=ProvenanceModel.from_provenance(syn.spectrum.provenance),
         )
 
-
 class CurveOfGrowthModel(BaseModel):
 
     label: str
@@ -430,7 +409,6 @@ class CurveOfGrowthModel(BaseModel):
             provenance=ProvenanceModel.from_provenance(c.provenance),
         )
 
-
 class AbsorbingLineModel(BaseModel):
 
     wavelength_nm: float
@@ -454,7 +432,6 @@ class AbsorbingLineModel(BaseModel):
             thin_width_nm=d.thin_width_nm,
             fwhm_nm=d.fwhm_nm,
         )
-
 
 class AbsorptionSpectrumModel(BaseModel):
 
@@ -498,7 +475,6 @@ class AbsorptionSpectrumModel(BaseModel):
             ),
         )
 
-
 class ComparisonModel(BaseModel):
     wavelength_nm: float
     reference_nm: float
@@ -518,14 +494,12 @@ class ComparisonModel(BaseModel):
             within_tolerance=c.within_tolerance,
         )
 
-
 class ShellPeakModel(BaseModel):
     label: str
     gsz_radius: float | None
     hf_radius: float | None
     gsz_depth: float | None
     hf_depth: float | None
-
 
 class DensityComparisonModel(BaseModel):
     gsz: FieldModel
@@ -551,23 +525,19 @@ class DensityComparisonModel(BaseModel):
             provenance=ProvenanceModel.from_provenance(c.provenance),
         )
 
-
 class ReferenceItemModel(BaseModel):
     label: str
     energy: QuantityModel
     energy_ev: QuantityModel
 
-
 class ReferenceModel(BaseModel):
     kind: Literal["levels", "markers"]
     items: list[ReferenceItemModel]
-
 
 class PotentialCurveModel(BaseModel):
     r: list[float]
     v_ev: list[float]
     provenance: ProvenanceModel
-
 
 class ForceLawModel(BaseModel):
     preset: str
