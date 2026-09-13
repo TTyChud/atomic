@@ -1,0 +1,33 @@
+# atomic — free-tier hosting on Render.
+# The whole instrument in one free web service: the engine computes the
+# physics and serves the compiled UI from the same process (see Dockerfile).
+# Deploys on every push to main; sleeps after 15 idle minutes and wakes in
+# about a minute on the next request.
+#
+# One-click path: dashboard → New → Web Service → pick this repo →
+# Render finds the Dockerfile; everything below is the reviewed version.
+#
+# Know the trade-off: the free instance has limited CPU, and background jobs
+# (Hartree-Fock, big samplings) run single-threaded within it. Rate limiting
+# stays ON so one visitor can't monopolize the engine.
+
+services:
+  - type: web
+    name: atomic
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      # Behind Render's proxy, rate limiting keys on X-Forwarded-For (the
+      # spoof-resistance case is proven in tests/test_server_ratelimit.py).
+      - key: ATOMIC_CLIENT_IP_HEADER
+        value: X-Forwarded-For
+      # Keep the background job pool modest on the shared free CPU.
+      - key: ATOMIC_JOB_WORKERS
+        value: "2"
+      # Override if the UI is later hosted elsewhere (e.g. Vercel); comma-
+      # separated origins. Same-origin deploys don't need this.
+      # - key: ATOMIC_ALLOWED_ORIGINS
+      #   value: https://atomic.vercel.app

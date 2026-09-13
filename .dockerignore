@@ -1,0 +1,20 @@
+# Python
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+tests/
+
+# Web
+web/node_modules
+web/dist
+
+# Docs and CI (docs ship in git, not in the runtime image)
+docs/
+scripts/
+environment.yml
+Makefile
+agent.md

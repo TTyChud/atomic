@@ -1,0 +1,38 @@
+# atomic — Fly single-machine deploy.
+# One micro-VM, one process: FastAPI serves the API *and* the compiled UI.
+# See docs/DEPLOY.md for the full walkthrough; `make deploy` drives this file.
+
+app = "atomic"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Rate limiting keys off the real client IP, not the proxy.
+  ATOMIC_CLIENT_IP_HEADER = "fly-client-ip"
+  # Keep the background job pool modest on a shared-vCPU micro VM.
+  ATOMIC_JOB_WORKERS = "2"
+  # For the split deploy (UI on Vercel calling this engine cross-origin),
+  # add that origin here — or set it as a secret so it stays out of git:
+  #   fly secrets set ATOMIC_ALLOWED_ORIGINS=https://<your-ui>.vercel.app
+  # ATOMIC_ALLOWED_ORIGINS = ""
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 60
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "3s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/api/health"

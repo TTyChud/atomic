@@ -19,4 +19,30 @@ jobs:
       - name: Test
         run: pytest -v --cov=atomic --cov-report=term
 
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@6044e13b5db4789a45d6d659c3709eb6cf1a4b31
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Build and smoke the container
+        run: bash scripts/smoke_container.sh atomic:ci
+
 
