@@ -33,8 +33,6 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
 
-
-    "websockets>=13",
     "matplotlib>=3.9",
 ]
 

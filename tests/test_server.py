@@ -23,6 +23,26 @@ def test_health(client):
     assert data == {"status": "ok", "version": "0.1.0"}
 
 
+def test_cors_allows_configured_split_deploy_origins(monkeypatch):
+    """A UI hosted away from the engine (Vercel in front of Fly) names itself
+    in ATOMIC_ALLOWED_ORIGINS; unknown origins get no CORS grant."""
+    monkeypatch.setenv("ATOMIC_ALLOWED_ORIGINS", "https://atomic.vercel.app")
+    with TestClient(create_app()) as c:
+        allowed = c.get("/api/health", headers={"Origin": "https://atomic.vercel.app"})
+        assert allowed.headers["access-control-allow-origin"] == "https://atomic.vercel.app"
+        stranger = c.get("/api/health", headers={"Origin": "https://evil.example"})
+        assert "access-control-allow-origin" not in stranger.headers
+
+
+def test_cors_defaults_to_dev_origins_only(monkeypatch):
+    monkeypatch.delenv("ATOMIC_ALLOWED_ORIGINS", raising=False)
+    with TestClient(create_app()) as c:
+        vite = c.get("/api/health", headers={"Origin": "http://localhost:5173"})
+        assert vite.headers["access-control-allow-origin"] == "http://localhost:5173"
+        other = c.get("/api/health", headers={"Origin": "https://atomic.vercel.app"})
+        assert "access-control-allow-origin" not in other.headers
+
+
 def test_systems_lists_hydrogenic_presets(client):
     systems = client.get("/api/systems").json()["systems"]
     keys = [s["key"] for s in systems]
@@ -276,23 +296,6 @@ def test_unknown_job_is_404_and_unfinished_meta_is_409(client):
         json={"n": 1, "l": 0, "m": 0, "count": 1000000},
     ).json()["id"]
     assert client.get(f"/api/jobs/{job_id}/meta").status_code == 409
-
-
-def test_websocket_streams_progress_to_done(client):
-    job_id = client.post(
-        "/api/jobs/sample",
-        json={"n": 1, "l": 0, "m": 0, "count": 1000},
-    ).json()["id"]
-    with client.websocket_connect(f"/ws/jobs/{job_id}") as ws:
-        last = None
-        for _ in range(200):
-            last = ws.receive_json()
-            if last["status"] in ("done", "error"):
-                break
-    assert last["status"] == "done"
-    assert last["progress"] == pytest.approx(1.0)
-
-
 
 
 def test_levels_endpoint_gross(client):

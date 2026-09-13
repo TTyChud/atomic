@@ -1,4 +1,3 @@
-import asyncio
 import dataclasses
 import logging
 import math
@@ -10,7 +9,7 @@ from types import SimpleNamespace
 from typing import Literal
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query, WebSocket
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -121,6 +120,21 @@ from atomic.systems import (
 from atomic.transfer import absorb, curve_of_growth, default_columns
 
 _DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+
+def _allowed_origins() -> list[str]:
+    """CORS allow-list: dev origins plus anything configured for split deploys.
+
+    A static UI hosted away from the engine (e.g. Vercel in front of a Fly
+    API) sets ATOMIC_ALLOWED_ORIGINS on the engine, comma-separated. Origins
+    must be scheme+host, no trailing slash. CORS only matters for browsers —
+    nothing else here ever trusts an Origin header.
+    """
+    raw = os.environ.get("ATOMIC_ALLOWED_ORIGINS", "").strip()
+    if not raw:
+        return _DEV_ORIGINS
+    extra = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
+    return _DEV_ORIGINS + [o for o in extra if o not in _DEV_ORIGINS]
 
 logger = logging.getLogger(__name__)
 
@@ -752,7 +766,10 @@ def create_app() -> FastAPI:
         max_workers=_job_worker_count(), thread_name_prefix="atomic-job"
     )
     app.add_middleware(
-        CORSMiddleware, allow_origins=_DEV_ORIGINS, allow_methods=["*"], allow_headers=["*"]
+        CORSMiddleware,
+        allow_origins=_allowed_origins(),
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.state.rate_limit = _build_rate_limiter()
@@ -1838,22 +1855,6 @@ def create_app() -> FastAPI:
         return Response(
             content=payload.tobytes(), media_type="application/octet-stream"
         )
-
-    @app.websocket("/ws/jobs/{job_id}")
-    async def job_progress(ws: WebSocket, job_id: str) -> None:
-        await ws.accept()
-        while True:
-            job = jobs.get(job_id)
-            if job is None:
-                await ws.send_json({"status": "error", "progress": 0.0, "error": "unknown job"})
-                break
-            await ws.send_json(
-                {"status": job.status.value, "progress": job.progress, "error": job.error}
-            )
-            if job.status in (JobStatus.DONE, JobStatus.ERROR):
-                break
-            await asyncio.sleep(0.1)
-        await ws.close()
 
     web_dist = _web_dist()
     if web_dist.is_dir():
