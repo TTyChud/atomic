@@ -15,7 +15,6 @@ from atomic.screened_atom import screened_radial
 _R_GRID_POINTS = 8192
 _X_GRID_POINTS = 4096
 
-
 @dataclass(frozen=True)
 class SampleCloud:
     positions: np.ndarray
@@ -27,20 +26,17 @@ class SampleCloud:
     basis: str
     provenance: Provenance
 
-
 def _radial_inverse_cdf_tabulated(r_grid: np.ndarray, R_values: np.ndarray):
     p = r_grid * r_grid * R_values * R_values
     cdf = cumulative_trapezoid(p, r_grid, initial=0.0)
     cdf /= cdf[-1]
     return r_grid, cdf, float(r_grid[-1])
 
-
 def _radial_inverse_cdf(n: int, l: int, Z: int, mu_ratio: float):
     r_max = 20.0 * n * n / (Z * mu_ratio)
     r = np.linspace(0.0, r_max, _R_GRID_POINTS)
     R = radial_wavefunction(n, l, r, Z=Z, mu_ratio=mu_ratio).values
     return _radial_inverse_cdf_tabulated(r, R)
-
 
 def _costheta_inverse_cdf(l: int, m: int):
     x = np.linspace(-1.0, 1.0, _X_GRID_POINTS)
@@ -49,7 +45,6 @@ def _costheta_inverse_cdf(l: int, m: int):
     cdf /= cdf[-1]
     return x, cdf
 
-
 def _phi_inverse_cdf(m: int):
     phi = np.linspace(0.0, 2.0 * np.pi, _X_GRID_POINTS)
     am = abs(m)
@@ -57,7 +52,6 @@ def _phi_inverse_cdf(m: int):
     cdf = (phi / 2.0 + sign * np.sin(2.0 * am * phi) / (4.0 * am)) / np.pi
     cdf /= cdf[-1]
     return phi, cdf
-
 
 def _validate_sampling_request(n: int, l: int, m: int, count: int, basis: str) -> None:
     """Checks shared by every sampler; one place, one wording."""
@@ -69,12 +63,10 @@ def _validate_sampling_request(n: int, l: int, m: int, count: int, basis: str) -
     if basis not in ("complex", "real"):
         raise ValueError(f"basis must be 'complex' or 'real', got {basis!r}")
 
-
 def _phi_description(phi_sampler: tuple[np.ndarray, np.ndarray] | None) -> str:
     if phi_sampler is None:
         return "phi uniform (|Y_lm|^2 is phi-independent)"
     return "phi from analytic real-basis marginal (cos^2/sin^2 m phi)"
-
 
 def _sampling_assumptions(seed: int, count: int, basis: str) -> tuple[str, str, str]:
     return (
@@ -82,7 +74,6 @@ def _sampling_assumptions(seed: int, count: int, basis: str) -> tuple[str, str, 
         f"drawn from RNG PCG64 seed={seed}, count={count}",
         "positions are reported in bohr",
     )
-
 
 def _draw_positions(count, r_grid, r_cdf, x_grid, x_cdf, phi_sampler, seed, n_chunks, progress):
     rng = np.random.default_rng(seed)
@@ -110,7 +101,6 @@ def _draw_positions(count, r_grid, r_cdf, x_grid, x_cdf, phi_sampler, seed, n_ch
         if progress is not None:
             progress(done / count)
     return np.concatenate(chunks)
-
 
 def sample_density(
     n: int,
@@ -148,7 +138,6 @@ def sample_density(
         positions=positions, n=n, l=l, m=m, Z=Z, mu_ratio=mu_ratio,
         basis=basis, provenance=provenance,
     )
-
 
 def sample_screened_density(
     z: int,
@@ -195,7 +184,6 @@ def sample_screened_density(
         positions=positions, n=n, l=l, m=m, Z=z, mu_ratio=1.0,
         basis=basis, provenance=provenance,
     )
-
 
 def sample_hf_density(
     z: int,

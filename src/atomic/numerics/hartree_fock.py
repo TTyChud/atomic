@@ -35,7 +35,6 @@ __all__ = [
 
 _NO_EXCHANGE = ExchangeOperator(terms=())
 
-
 @dataclass(frozen=True)
 class ChannelSolution:
 
@@ -44,10 +43,8 @@ class ChannelSolution:
     iterations: int
     residual: float
 
-
 class HFConvergenceError(RuntimeError):
     pass
-
 
 def local_hamiltonian_bands(
     v_local: np.ndarray, l: int, r: np.ndarray
@@ -77,7 +74,6 @@ def local_hamiltonian_bands(
     offdiag = np.full(r.size - 1, -inv2m / h**2)
     return diag, offdiag
 
-
 def fock_operator(
     subshells: tuple[Subshell, ...],
     a_index: int,
@@ -90,7 +86,6 @@ def fock_operator(
     return _fock_parts(
         subshells, a_index, v_nuclear, l, mesh, exchange=exchange
     )[0]
-
 
 def _fock_parts(
     subshells: tuple[Subshell, ...],
@@ -122,7 +117,6 @@ def _fock_parts(
     op = LinearOperator((n, n), matvec=matvec, rmatvec=matvec, dtype=float)
     return op, diag, offdiag
 
-
 def _preconditioner(
     diag: np.ndarray, offdiag: np.ndarray, lowest: float
 ) -> LinearOperator:
@@ -137,14 +131,12 @@ def _preconditioner(
 
     return LinearOperator((diag.size, diag.size), matvec=apply, dtype=float)
 
-
 def local_expectation(
     p: np.ndarray, v_local: np.ndarray, l: int, mesh: RadialMesh
 ) -> float:
     diag, offdiag = mesh.hamiltonian_bands(v_local, l)
     s = mesh.to_s(p)
     return float(s @ (diag * s) + 2.0 * float(offdiag @ (s[:-1] * s[1:])))
-
 
 def solve_channel(
     subshells: tuple[Subshell, ...],
@@ -252,7 +244,6 @@ def solve_channel(
         residual=residual,
     )
 
-
 @dataclass(frozen=True)
 class SCFSolution:
     subshells: tuple[Subshell, ...]
@@ -260,10 +251,8 @@ class SCFSolution:
     iterations: int
     residual_history: tuple[float, ...]
 
-
 def one_electron_integral(subshell: Subshell, z: float, mesh: RadialMesh) -> float:
     return local_expectation(subshell.p, -z / mesh.r, subshell.l, mesh)
-
 
 def orbital_energy(
     subshells: tuple[Subshell, ...],
@@ -286,7 +275,6 @@ def orbital_energy(
     )
     return one + direct - k_term
 
-
 def _interaction_energy(
     subshells: tuple[Subshell, ...], r: np.ndarray, *, exchange: bool = True
 ) -> float:
@@ -306,7 +294,6 @@ def _interaction_energy(
                     total -= 0.5 * a.q * b.q * tj * tj * slater_g(a.p, b.p, r, k)
     return float(total)
 
-
 def total_energy_direct(
     z: int, subshells: tuple[Subshell, ...], mesh: RadialMesh,
     *, exchange: bool = True,
@@ -315,7 +302,6 @@ def total_energy_direct(
     return float(
         one + _interaction_energy(subshells, mesh.r, exchange=exchange)
     )
-
 
 def total_energy_from_orbitals(
     subshells: tuple[Subshell, ...],
@@ -331,7 +317,6 @@ def total_energy_from_orbitals(
         )
     )
 
-
 def kinetic_and_potential(
     z: int, subshells: tuple[Subshell, ...], mesh: RadialMesh,
     *, exchange: bool = True,
@@ -346,7 +331,6 @@ def kinetic_and_potential(
     return float(kinetic), float(
         nuclear + _interaction_energy(subshells, mesh.r, exchange=exchange)
     )
-
 
 def scf(
     z: int,

@@ -19,7 +19,6 @@ _Z_ASSUMPTIONS = (
     "the diagonal comes from the selected level model: alpha^2 fine structure or exact Dirac",
 )
 
-
 @dataclass(frozen=True)
 class ZeemanSublevel:
     m_j: float
@@ -28,19 +27,15 @@ class ZeemanSublevel:
     high_field_label: str
     energy: Quantity
 
-
 def lande_g(l: int, j: float) -> float:
     s = 0.5
     return 1.0 + (j * (j + 1.0) + s * (s + 1.0) - l * (l + 1.0)) / (2.0 * j * (j + 1.0))
 
-
 def _high_field_label(m_j: float, m_s: float) -> str:
     return f"m_l={m_j - m_s:g}, m_s={m_s:+g}"
 
-
 def _mean_sq_radius(n: int, l: int, Z: int) -> float:
     return (n * n / (2.0 * Z * Z)) * (5.0 * n * n + 1.0 - 3.0 * l * (l + 1.0))
-
 
 def zeeman_sublevels(
     n: int, l: int, Z: int = 1, mu_ratio: float = 1.0, m_over_M: float = 0.0,

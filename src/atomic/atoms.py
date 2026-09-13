@@ -7,19 +7,15 @@ SUBSHELL_LABELS = "spdfgh"
 Subshell = tuple[int, int]
 Configuration = tuple[tuple[Subshell, int], ...]
 
-
 def subshell_capacity(l: int) -> int:
     return 2 * (2 * l + 1)
-
 
 def _madelung_order() -> list[Subshell]:
     shells = [(n, l) for n in range(1, 8) for l in range(n)]
     shells.sort(key=lambda nl: (nl[0] + nl[1], nl[0]))
     return shells
 
-
 _MADELUNG = _madelung_order()
-
 
 def aufbau_configuration(n_electrons: int, pauli: bool = True) -> Configuration:
     if n_electrons < 1:
@@ -38,10 +34,8 @@ def aufbau_configuration(n_electrons: int, pauli: bool = True) -> Configuration:
         raise ValueError(f"{n_electrons} electrons exceeds supported shells")
     return tuple(out)
 
-
 def format_config(config: Configuration) -> str:
     return " ".join(f"{n}{SUBSHELL_LABELS[l]}{occ}" for (n, l), occ in config)
-
 
 def parse_config(text: str) -> Configuration:
     out: list[tuple[Subshell, int]] = []
@@ -52,14 +46,11 @@ def parse_config(text: str) -> Configuration:
         out.append(((n, l), occ))
     return tuple(out)
 
-
 def total_electrons(config: Configuration) -> int:
     return sum(occ for _, occ in config)
 
-
 def is_ground(config: Configuration, pauli: bool = True) -> bool:
     return config == aufbau_configuration(total_electrons(config), pauli)
-
 
 def validate_config(config: Configuration, pauli: bool = True) -> None:
     for (n, l), occ in config:
@@ -72,12 +63,10 @@ def validate_config(config: Configuration, pauli: bool = True) -> None:
                 f"occupancy {occ} exceeds capacity {subshell_capacity(l)} for l={l}"
             )
 
-
 def open_subshells(config: Configuration) -> Configuration:
     return tuple(
         (nl, occ) for nl, occ in config if 0 < occ < subshell_capacity(nl[1])
     )
-
 
 def _microstate_census(l: int, q: int) -> Counter[tuple[int, int]]:
     spin_orbitals = [(ml, ms) for ml in range(-l, l + 1) for ms in (1, -1)]
@@ -85,7 +74,6 @@ def _microstate_census(l: int, q: int) -> Counter[tuple[int, int]]:
     for pick in itertools.combinations(spin_orbitals, q):
         census[(sum(ml for ml, _ in pick), sum(ms for _, ms in pick))] += 1
     return census
-
 
 def subshell_terms(l: int, q: int) -> tuple[tuple[int, int], ...]:
     if not 0 <= q <= subshell_capacity(l):
@@ -109,10 +97,8 @@ def subshell_terms(l: int, q: int) -> tuple[tuple[int, int], ...]:
                     del census[(ml, twice_ms)]
     return tuple(found)
 
-
 def subshell_term_count(l: int, q: int) -> int:
     return len(subshell_terms(l, q))
-
 
 def is_single_term(config: Configuration) -> bool:
     open_shells = open_subshells(config)
@@ -120,16 +106,13 @@ def is_single_term(config: Configuration) -> bool:
         return False
     return all(subshell_term_count(l, q) == 1 for (_, l), q in open_shells)
 
-
 @dataclass(frozen=True)
 class Element:
     z: int
     symbol: str
     name: str
 
-
     mass_u: float
-
 
 ELEMENTS: tuple[Element, ...] = (
     Element(1, "H", "Hydrogen", 1.008), Element(2, "He", "Helium", 4.002602),
@@ -146,35 +129,27 @@ ELEMENTS: tuple[Element, ...] = (
 _BY_SYMBOL = {e.symbol: e for e in ELEMENTS}
 _BY_Z = {e.z: e for e in ELEMENTS}
 
-
 NO_GSZ_PARAMETERS: frozenset[int] = frozenset({16, 17})
-
 
 ATOM_KEYS: tuple[str, ...] = tuple(
     e.symbol.lower() for e in ELEMENTS if e.z >= 2
 )
 
-
 GSZ_ATOM_KEYS: tuple[str, ...] = tuple(
     k for k in ATOM_KEYS if _BY_SYMBOL[k.capitalize()].z not in NO_GSZ_PARAMETERS
 )
 
-
 def has_gsz_parameters(z: int) -> bool:
     return z not in NO_GSZ_PARAMETERS
-
 
 def element_by_symbol(sym: str) -> Element:
     return _BY_SYMBOL[sym]
 
-
 def element_by_z(z: int) -> Element:
     return _BY_Z[z]
 
-
 def is_atom_key(key: str) -> bool:
     return key in ATOM_KEYS
-
 
 def atom_for_key(key: str) -> Element:
     if not is_atom_key(key):

@@ -14,7 +14,6 @@ _DIRAC_ASSUMPTIONS = (
     "relativistic recoil is neglected",
 )
 
-
 def _validate(n: int, j: float, Z: int, alpha: float) -> None:
     if n < 1:
         raise ValueError(f"principal quantum number n must be >= 1, got {n}")
@@ -29,7 +28,6 @@ def _validate(n: int, j: float, Z: int, alpha: float) -> None:
             f"supercritical: Z*alpha = {Z * alpha:g} >= j+1/2 = {j + 0.5:g}; "
             "the point-Coulomb Dirac solution is not real here"
         )
-
 
 def dirac_energy(
     n: int, j: float, Z: int = 1, mu_ratio: float = 1.0, alpha: float = ALPHA
@@ -62,7 +60,6 @@ def dirac_energy(
             ),
         ),
     )
-
 
 def dirac_fine_splitting(
     n: int, l: int, Z: int = 1, mu_ratio: float = 1.0, alpha: float = ALPHA

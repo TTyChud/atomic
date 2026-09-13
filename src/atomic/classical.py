@@ -9,13 +9,11 @@ _APPROX = "Bohr model r_n = n^2 a0 / Z (a semi-classical circular orbit)"
 _LARMOR = "Larmor radiative collapse in classical E&M, exact under classical rules"
 _ASSUME = ("classical electrodynamics, deliberately non-quantum",)
 
-
 @dataclass(frozen=True)
 class BohrOrbit:
     n: int
     radius_bohr: Quantity
     radius_pm: Quantity
-
 
 @dataclass(frozen=True)
 class ClassicalGhost:
@@ -28,7 +26,6 @@ class ClassicalGhost:
     orbital_period_s: Quantity
     orbit_count: Quantity
 
-
 def _bohr_orbit(n: int, a0_sys_m: float, a0_m: float, z: int) -> BohrOrbit:
     r_m = n * n * a0_sys_m / z
     prov = Provenance(fidelity=Fidelity.APPROXIMATION, method=_APPROX, assumptions=_ASSUME)
@@ -37,7 +34,6 @@ def _bohr_orbit(n: int, a0_sys_m: float, a0_m: float, z: int) -> BohrOrbit:
         radius_bohr=Quantity(r_m / a0_m, "bohr", f"Bohr orbit n={n}", prov),
         radius_pm=Quantity(r_m * 1e12, "pm", f"Bohr orbit n={n}", prov),
     )
-
 
 def classical_ghost(n: int, system: str | System = "h") -> ClassicalGhost:
     if n < 1:

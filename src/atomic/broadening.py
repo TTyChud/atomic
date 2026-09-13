@@ -46,7 +46,6 @@ _NOT_MODELLED = (
     "no bulk motion, rotation, Zeeman splitting, or hyperfine components",
 )
 
-
 @dataclass(frozen=True)
 class LineProfile:
 
@@ -60,7 +59,6 @@ class LineProfile:
     terms: tuple[str, ...]
     label: str
 
-
 @dataclass(frozen=True)
 class SyntheticSpectrum:
 
@@ -73,13 +71,11 @@ class SyntheticSpectrum:
     stark_span: Quantity | None = None
     stark_note: str | None = None
 
-
 def natural_gamma_nm(gamma_total_s: float, wavelength_nm: float) -> float:
     if gamma_total_s <= 0.0:
         return 0.0
     fwhm = wavelength_nm**2 * 1e-9 * gamma_total_s / (2.0 * math.pi * _sc.c)
     return 0.5 * fwhm
-
 
 def doppler_sigma_nm(
     wavelength_nm: float, temperature_k: float, mass_kg: float
@@ -92,12 +88,10 @@ def doppler_sigma_nm(
         raise ValueError(f"emitter mass must be > 0 kg, got {mass_kg}")
     return wavelength_nm * math.sqrt(_sc.k * temperature_k / (mass_kg * _sc.c**2))
 
-
 def instrumental_sigma_nm(wavelength_nm: float, resolving_power: float) -> float:
     if resolving_power <= 0.0:
         raise ValueError(f"resolving power must be > 0, got {resolving_power}")
     return wavelength_nm / (resolving_power * _FWHM_PER_SIGMA)
-
 
 def voigt(delta_nm: np.ndarray, sigma_nm: float, gamma_nm: float) -> np.ndarray:
     x = np.asarray(delta_nm, dtype=float)
@@ -113,12 +107,10 @@ def voigt(delta_nm: np.ndarray, sigma_nm: float, gamma_nm: float) -> np.ndarray:
     z = (x + 1j * gamma_nm) / (sigma_nm * math.sqrt(2.0))
     return np.real(wofz(z)) / (sigma_nm * math.sqrt(2.0 * math.pi))
 
-
 def voigt_fwhm(sigma_nm: float, gamma_nm: float) -> float:
     f_l = 2.0 * gamma_nm
     f_g = _FWHM_PER_SIGMA * sigma_nm
     return 0.5346 * f_l + math.sqrt(0.2166 * f_l**2 + f_g**2)
-
 
 def level_decay_rates(lines) -> dict[tuple, float]:
     rates: dict[tuple, float] = {}
@@ -128,7 +120,6 @@ def level_decay_rates(lines) -> dict[tuple, float]:
         key = (ln.n_upper, ln.l_upper, ln.j_upper)
         rates[key] = rates.get(key, 0.0) + ln.einstein_a.value
     return rates
-
 
 def stark_span_estimate(
     n_upper: int, n_lower: int, wavelength_nm: float, electron_density_cm3: float
@@ -175,7 +166,6 @@ def stark_span_estimate(
         ),
     )
 
-
 def _tail_fraction(span_nm: float, sigma_nm: float, gamma_nm: float) -> float:
     if span_nm <= 0.0:
         return 1.0
@@ -185,12 +175,10 @@ def _tail_fraction(span_nm: float, sigma_nm: float, gamma_nm: float) -> float:
     )
     return min(1.0, lorentz + gauss)
 
-
 def _offsets(n_core: int, n_wing: int) -> np.ndarray:
     return np.concatenate([
         np.linspace(0.0, 2.5, n_core), np.geomspace(2.8, 1e5, n_wing)
     ])
-
 
 def _grid(
     centres: np.ndarray,
@@ -208,7 +196,6 @@ def _grid(
     grid = np.concatenate([clustered, background, [lo, hi]])
     grid = grid[(grid >= lo) & (grid <= hi)]
     return np.unique(grid)
-
 
 def synthesize(
     line_list,

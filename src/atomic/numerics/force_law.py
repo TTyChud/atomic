@@ -18,7 +18,6 @@ CURVE_POINTS = 256
 Params = dict[str, float]
 PotentialFn = Callable[[np.ndarray], np.ndarray]
 
-
 @dataclass(frozen=True)
 class ParamSpec:
     name: str
@@ -27,25 +26,21 @@ class ParamSpec:
     default: float
     unit: str
 
-
 @dataclass(frozen=True)
 class ReferenceItem:
     label: str
     energy: Quantity
-
 
 @dataclass(frozen=True)
 class Reference:
     kind: str
     items: tuple[ReferenceItem, ...]
 
-
 @dataclass(frozen=True)
 class ForceLawLevel:
     radial_index: int
     energy: Quantity
     trusted: bool = True
-
 
 @dataclass(frozen=True)
 class ForceLawResult:
@@ -61,7 +56,6 @@ class ForceLawResult:
     potential_curve: Field
     expression: str | None = None
 
-
 @dataclass(frozen=True)
 class ForcePreset:
     key: str
@@ -71,7 +65,6 @@ class ForcePreset:
     build_potential: Callable[[Params, int, float], PotentialFn]
     reference: Callable[[Params, int, float, int, int], Reference]
     r_max: Callable[[Params, int, int], float]
-
 
 def _hydrogen_reference(params: Params, z: int, mu: float, l: int, n_states: int) -> Reference:
     items = tuple(
@@ -83,15 +76,12 @@ def _hydrogen_reference(params: Params, z: int, mu: float, l: int, n_states: int
     )
     return Reference(kind="levels", items=items)
 
-
 def _powerlaw_potential(params: Params, z: int, mu: float) -> PotentialFn:
     p = params["p"]
     return lambda r: -z / r**p
 
-
 def _powerlaw_rmax(params: Params, z: int, n_states: int) -> float:
     return 20.0 * (n_states + 1) ** 2 / z
-
 
 POWERLAW = ForcePreset(
     key="powerlaw",
@@ -103,15 +93,12 @@ POWERLAW = ForcePreset(
     r_max=_powerlaw_rmax,
 )
 
-
 def _yukawa_potential(params: Params, z: int, mu: float) -> PotentialFn:
     lam = params["lambda"]
     return lambda r: -(z / r) * np.exp(-r / lam)
 
-
 def _yukawa_rmax(params: Params, z: int, n_states: int) -> float:
     return max(8.0 * params["lambda"], 20.0 * (n_states + 1) ** 2 / z)
-
 
 YUKAWA = ForcePreset(
     key="yukawa",
@@ -123,15 +110,12 @@ YUKAWA = ForcePreset(
     r_max=_yukawa_rmax,
 )
 
-
 def _coulombcore_potential(params: Params, z: int, mu: float) -> PotentialFn:
     c = params["core"]
     return lambda r: -z / r + c / r**2
 
-
 def _coulombcore_rmax(params: Params, z: int, n_states: int) -> float:
     return 20.0 * (n_states + 1) ** 2 / z
-
 
 COULOMBCORE = ForcePreset(
     key="coulombcore",
@@ -143,12 +127,10 @@ COULOMBCORE = ForcePreset(
     r_max=_coulombcore_rmax,
 )
 
-
 def _harmonic_potential(params: Params, z: int, mu: float) -> PotentialFn:
     omega = params["omega"]
     k = mu * omega**2
     return lambda r: 0.5 * k * r**2
-
 
 def _harmonic_reference(params: Params, z: int, mu: float, l: int, n_states: int) -> Reference:
     omega = params["omega"]
@@ -158,12 +140,10 @@ def _harmonic_reference(params: Params, z: int, mu: float, l: int, n_states: int
     )
     return Reference(kind="levels", items=items)
 
-
 def _harmonic_rmax(params: Params, z: int, n_states: int) -> float:
     omega = params["omega"]
     e_top = omega * (2 * (n_states - 1) + 1.5)
     return 4.0 * math.sqrt(2.0 * e_top / omega**2)
-
 
 HARMONIC = ForcePreset(
     key="harmonic",
@@ -175,12 +155,10 @@ HARMONIC = ForcePreset(
     r_max=_harmonic_rmax,
 )
 
-
 def _finitewell_potential(params: Params, z: int, mu: float) -> PotentialFn:
     v0 = params["v0"]
     a = params["a"]
     return lambda r: np.where(r < a, -v0, 0.0)
-
 
 def _finitewell_reference(params: Params, z: int, mu: float, l: int, n_states: int) -> Reference:
     v0 = params["v0"]
@@ -200,10 +178,8 @@ def _finitewell_reference(params: Params, z: int, mu: float, l: int, n_states: i
     )
     return Reference(kind="markers", items=items)
 
-
 def _finitewell_rmax(params: Params, z: int, n_states: int) -> float:
     return max(6.0 * params["a"], 40.0)
-
 
 FINITEWELL = ForcePreset(
     key="finitewell",
@@ -218,7 +194,6 @@ FINITEWELL = ForcePreset(
     r_max=_finitewell_rmax,
 )
 
-
 PRESETS: dict[str, ForcePreset] = {
     POWERLAW.key: POWERLAW,
     YUKAWA.key: YUKAWA,
@@ -226,7 +201,6 @@ PRESETS: dict[str, ForcePreset] = {
     HARMONIC.key: HARMONIC,
     FINITEWELL.key: FINITEWELL,
 }
-
 
 def _validate(preset: ForcePreset, params: Params, l: int, n_states: int) -> None:
     if l < 0:
@@ -242,17 +216,14 @@ def _validate(preset: ForcePreset, params: Params, l: int, n_states: int) -> Non
                 f"{spec.name} must be in [{spec.min}, {spec.max}], got {v}"
             )
 
-
 def _bound(preset: ForcePreset, energy: Quantity) -> bool:
     return preset.binding == "confining" or energy.value < 0.0
-
 
 def _tag(energy: Quantity, note: str) -> Quantity:
     return replace(
         energy,
         provenance=replace(energy.provenance, method=energy.provenance.method + note),
     )
-
 
 def _sample_curve(potential: PotentialFn, r_max: float, note: str) -> Field:
     r = np.linspace(r_max / CURVE_POINTS, r_max, CURVE_POINTS)
@@ -268,7 +239,6 @@ def _sample_curve(potential: PotentialFn, r_max: float, note: str) -> Field:
             method=f"the analytic potential sampled on a {CURVE_POINTS}-point grid{note}",
         ),
     )
-
 
 def force_law_levels(
     preset: str,
@@ -313,14 +283,11 @@ def force_law_levels(
         potential_curve=curve,
     )
 
-
 FREE_FORM_BOX_TOL = 5e-3
 FREE_FORM_GRID_FRAC = 1e-2
 
-
 def _free_form_rmax(z: int, n_states: int) -> float:
     return 40.0 * (n_states + 1) ** 2 / max(z, 1)
-
 
 def free_form_levels(
     expr: str,

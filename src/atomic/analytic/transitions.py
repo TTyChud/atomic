@@ -24,10 +24,8 @@ _ONE_ELECTRON = (
     "no fine-structure, relativistic or QED correction to the rate",
 )
 
-
 def _gauss_laguerre_nodes(n: int, n2: int) -> int:
     return (n + n2 + 3) // 2
-
 
 @lru_cache(maxsize=4096)
 def _dipole_value_and_error(
@@ -38,14 +36,12 @@ def _dipole_value_and_error(
     fine = _dipole_quadrature(n, l, n2, l2, kappa, 2 * nodes)
     return fine, abs(fine - coarse), 2 * nodes
 
-
 def _dipole_quadrature(n: int, l: int, n2: int, l2: int, kappa: float, nodes: int) -> float:
     a = kappa * (1.0 / n + 1.0 / n2)
     x, w = roots_laguerre(nodes)
     r = x / a
     integrand = _radial_eval(n, l, r, kappa) * _radial_eval(n2, l2, r, kappa) * r**3 * np.exp(x)
     return float(np.dot(w, integrand) / a)
-
 
 def dipole_radial_integral(
     n: int, l: int, n2: int, l2: int, Z: int = 1, mu_ratio: float = 1.0,
@@ -73,7 +69,6 @@ def dipole_radial_integral(
         ),
     )
 
-
 def f_from_radial_dipole(
     dE_hartree: float, l_low: int, l_up: int, dipole_bohr: float
 ) -> float:
@@ -81,7 +76,6 @@ def f_from_radial_dipole(
         (2.0 / 3.0) * dE_hartree
         * (max(l_low, l_up) / (2.0 * l_low + 1.0)) * dipole_bohr**2
     )
-
 
 def A_from_radial_dipole(
     dE_hartree: float, l_up: int, l_low: int, dipole_bohr: float,
@@ -95,7 +89,6 @@ def A_from_radial_dipole(
     )
     return a_au / _T_AU
 
-
 def _forbidden(kind: str, label: str, unit: str) -> Quantity:
     return Quantity(
         value=0.0,
@@ -108,7 +101,6 @@ def _forbidden(kind: str, label: str, unit: str) -> Quantity:
             error_estimate=0.0,
         ),
     )
-
 
 def oscillator_strength(
     n_low: int, l_low: int, n_up: int, l_up: int, Z: int = 1, mu_ratio: float = 1.0,
@@ -140,7 +132,6 @@ def oscillator_strength(
             refinement=R.provenance.refinement,
         ),
     )
-
 
 def einstein_A(
     n_up: int, l_up: int, n_low: int, l_low: int, Z: int = 1, mu_ratio: float = 1.0,
@@ -174,7 +165,6 @@ def einstein_A(
         ),
     )
 
-
 def _validate_j(l: int, j: float, name: str) -> None:
     allowed = [l - 0.5, l + 0.5] if l > 0 else [0.5]
     if not any(abs(j - a) < 1e-9 for a in allowed):
@@ -182,16 +172,13 @@ def _validate_j(l: int, j: float, name: str) -> None:
             f"{name}: j must be l +/- 1/2 for l = {l} (allowed {allowed}), got {j}"
         )
 
-
 def _fine_branching(l_up: int, j_up: float, l_low: int, j_low: float) -> float:
     return (2.0 * j_low + 1.0) * wigner_6j(j_low, 1, j_up, l_up, 0.5, l_low) ** 2
-
 
 _FINE_METHOD = (
     "A = (4/3) alpha^3 dE^3 (2j+1) {j 1 j'; l' 1/2 l}^2 l_max |R|^2 / t_au; "
     "the 6j symbol splits the multiplet rate across j (spin is a spectator)"
 )
-
 
 def einstein_A_fine(
     n_up: int, l_up: int, j_up: float,
@@ -237,7 +224,6 @@ def einstein_A_fine(
             refinement=R.provenance.refinement,
         ),
     )
-
 
 def oscillator_strength_fine(
     n_low: int, l_low: int, j_low: float,
@@ -286,7 +272,6 @@ def oscillator_strength_fine(
         ),
     )
 
-
 def lifetime_fine(
     n: int, l: int, j: float, Z: int = 1, mu_ratio: float = 1.0,
     alpha: float = ALPHA,
@@ -320,7 +305,6 @@ def lifetime_fine(
             refinement="adding higher multipoles and QED corrections to the rate",
         ),
     )
-
 
 def lifetime(n: int, l: int, Z: int = 1, mu_ratio: float = 1.0, alpha: float = ALPHA) -> Quantity:
     validate_quantum_numbers(n, l)

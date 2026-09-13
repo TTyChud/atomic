@@ -6,7 +6,6 @@ _PROV = Provenance(
     assumptions=("Hartree atomic units, with hbar = 1",),
 )
 
-
 def oscillator_energy(k: int, l: int, omega: float) -> Quantity:
     if k < 0:
         raise ValueError(f"radial index k must be >= 0, got {k}")
@@ -20,7 +19,6 @@ def oscillator_energy(k: int, l: int, omega: float) -> Quantity:
         label=f"E_osc[k={k}, l={l}]",
         provenance=_PROV,
     )
-
 
 def oscillator_levels(omega: float, l: int, n_states: int) -> tuple[Quantity, ...]:
     if n_states < 1:

@@ -6,7 +6,6 @@ import webbrowser
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="atomic")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -25,7 +24,6 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--no-browser", action="store_true")
     return parser
 
-
 def _resolve_serve_target(args: argparse.Namespace) -> tuple[str, int]:
     """Precedence: explicit flag > ATOMIC_HOST/ATOMIC_PORT env > PORT (PaaS
     convention: Render, Heroku, ...) > loopback default."""
@@ -41,10 +39,8 @@ def _resolve_serve_target(args: argparse.Namespace) -> tuple[str, int]:
             port = DEFAULT_PORT
     return host, port
 
-
 def _open_browser_soon(url: str) -> None:
     threading.Timer(1.5, webbrowser.open, args=(url,)).start()
-
 
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
@@ -57,7 +53,6 @@ def main(argv: list[str] | None = None) -> None:
         if host == DEFAULT_HOST and not args.no_browser:
             _open_browser_soon(f"http://{host}:{port}")
         uvicorn.run(create_app(), host=host, port=port)
-
 
 if __name__ == "__main__":
     main()

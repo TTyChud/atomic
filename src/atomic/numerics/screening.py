@@ -22,7 +22,6 @@ _GSZ_NEUTRAL_DK: dict[int, tuple[float, float]] = {
     18: (1.045, 3.50),
 }
 
-
 def gsz_parameters(z: int, n_electrons: int) -> tuple[float, float]:
     if z < 1:
         raise ValueError(f"Z must be >= 1, got {z}")
@@ -36,11 +35,9 @@ def gsz_parameters(z: int, n_electrons: int) -> tuple[float, float]:
     d, k = _GSZ_NEUTRAL_DK[z]
     return d, k * d
 
-
 def _omega(r: np.ndarray, d: float, h: float) -> np.ndarray:
     with np.errstate(over="ignore"):
         return 1.0 / (h * np.expm1(r / d) + 1.0)
-
 
 def z_eff(z: int, n_electrons: int, r: np.ndarray) -> np.ndarray:
     core = float(z - n_electrons + 1)
@@ -50,13 +47,11 @@ def z_eff(z: int, n_electrons: int, r: np.ndarray) -> np.ndarray:
     d, h = gsz_parameters(z, n_electrons)
     return core + (n_electrons - 1) * _omega(r, d, h)
 
-
 def screened_potential(z: int, n_electrons: int) -> Callable[[np.ndarray], np.ndarray]:
     def v(r: np.ndarray) -> np.ndarray:
         r = np.asarray(r, dtype=float)
         return -z_eff(z, n_electrons, r) / r
     return v
-
 
 def screening_provenance(z: int, n_electrons: int) -> Provenance:
     return Provenance(

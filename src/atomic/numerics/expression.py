@@ -10,10 +10,8 @@ MAX_POW = 12
 
 PotentialFn = Callable[[np.ndarray], np.ndarray]
 
-
 class ExpressionError(ValueError):
     pass
-
 
 _CONSTANTS = {"pi": math.pi, "e": math.e}
 
@@ -33,7 +31,6 @@ _CMPOPS = {
     ast.Lt: np.less, ast.LtE: np.less_equal, ast.Gt: np.greater,
     ast.GtE: np.greater_equal, ast.Eq: np.equal, ast.NotEq: np.not_equal,
 }
-
 
 def compile_potential(expr: str) -> PotentialFn:
     if not expr or not expr.strip():
@@ -56,7 +53,6 @@ def compile_potential(expr: str) -> PotentialFn:
         return np.asarray(out, dtype=float) * np.ones_like(r, dtype=float)
 
     return potential
-
 
 def _check(node: ast.AST, *, in_where: bool = False) -> None:
     if isinstance(node, ast.BinOp):
@@ -94,7 +90,6 @@ def _check(node: ast.AST, *, in_where: bool = False) -> None:
         _check(node.comparators[0])
     else:
         raise ExpressionError(f"{type(node).__name__} is not allowed in a potential")
-
 
 def _eval(node: ast.AST, r: np.ndarray):
     if isinstance(node, ast.BinOp):

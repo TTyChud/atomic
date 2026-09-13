@@ -11,14 +11,12 @@ __all__ = [
     "slater_g",
 ]
 
-
 def _cumulative_trapezoid(y: np.ndarray, x: np.ndarray) -> np.ndarray:
     increments = 0.5 * (y[1:] + y[:-1]) * np.diff(x)
     out = np.empty_like(y)
     out[0] = 0.0
     np.cumsum(increments, out=out[1:])
     return out
-
 
 @dataclass(frozen=True)
 class MultipoleGeometry:
@@ -41,7 +39,6 @@ class MultipoleGeometry:
         np.cumsum((y[1:] + y[:-1]) * self.half_dr, out=out[1:])
         return out
 
-
 def multipole_geometry(r: np.ndarray, k: int) -> MultipoleGeometry:
     if k < 0:
         raise ValueError(f"multipole order k must be >= 0, got {k}")
@@ -59,7 +56,6 @@ def multipole_geometry(r: np.ndarray, k: int) -> MultipoleGeometry:
         r_inv_k1=r ** (-(k + 1)),
     )
 
-
 def pair_potential(
     p_a: np.ndarray, p_b: np.ndarray, r: np.ndarray, k: int
 ) -> np.ndarray:
@@ -67,10 +63,8 @@ def pair_potential(
         raise ValueError("orbitals and grid must have the same shape")
     return multipole_geometry(r, k).potential(p_a, p_b)
 
-
 def slater_f(p_a: np.ndarray, p_b: np.ndarray, r: np.ndarray, k: int) -> float:
     return float(np.trapezoid(p_a**2 * pair_potential(p_b, p_b, r, k), r))
-
 
 def slater_g(p_a: np.ndarray, p_b: np.ndarray, r: np.ndarray, k: int) -> float:
     return float(np.trapezoid(p_a * p_b * pair_potential(p_a, p_b, r, k), r))

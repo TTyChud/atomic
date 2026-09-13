@@ -15,14 +15,11 @@ __all__ = [
 
 _H_TARGET = 0.01
 
-
 def dipole_box_radius(n_top: int, z_net: float = 1.0) -> float:
     return 10.0 * (n_top + 1) ** 2 / z_net
 
-
 def grid_points_for(r_max: float, h_target: float = _H_TARGET) -> int:
     return int(np.ceil(r_max / h_target))
-
 
 def dipole_from_solutions(
     sol_a: RadialSolution, k_a: int, sol_b: RadialSolution, k_b: int
@@ -34,7 +31,6 @@ def dipole_from_solutions(
         )
     r = sol_a.r
     return float(np.trapezoid(sol_a.u[k_a] * sol_b.u[k_b] * r, r))
-
 
 def _overlap(
     potential: Callable[[np.ndarray], np.ndarray],
@@ -52,7 +48,6 @@ def _overlap(
         n_points=n_points, n_states=k_b + 1,
     )
     return dipole_from_solutions(sol_a, k_a, sol_b, k_b)
-
 
 def dipole_matrix_element(
     potential: Callable[[np.ndarray], np.ndarray],

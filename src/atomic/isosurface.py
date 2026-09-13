@@ -27,7 +27,6 @@ _TAIL_SAMPLES = 1024
 
 _EVAL_CHUNK = 200_000
 
-
 @dataclass(frozen=True)
 class Isosurface:
 
@@ -56,10 +55,8 @@ class Isosurface:
     def outside_fraction(self) -> float:
         return 1.0 - self.enclosed_fraction.value
 
-
 def default_half_width(n: int, Z: int = 1, mu_ratio: float = 1.0) -> float:
     return (2.0 * n * n + 6.0 * n) / (Z * mu_ratio)
-
 
 def _density_on_grid(evaluator, half_width: float, resolution: int, progress=None):
     axis = np.linspace(-half_width, half_width, resolution)
@@ -77,14 +74,11 @@ def _density_on_grid(evaluator, half_width: float, resolution: int, progress=Non
             progress(i1 / resolution)
     return grid, axis, assumptions
 
-
 def _cell_volume(half_width: float, resolution: int) -> float:
     return (2.0 * half_width / (resolution - 1)) ** 3
 
-
 def _captured(grid: np.ndarray, half_width: float, resolution: int) -> float:
     return float(grid.sum() * _cell_volume(half_width, resolution))
-
 
 def radial_mass(evaluator, l: int, m: int, r_max: float, samples: int = _TAIL_SAMPLES):
     n_theta = max(2, l + 2)
@@ -113,7 +107,6 @@ def radial_mass(evaluator, l: int, m: int, r_max: float, samples: int = _TAIL_SA
     cumulative[1:] = np.cumsum(0.5 * (shell[1:] + shell[:-1]) * np.diff(r))
     return r, cumulative
 
-
 def _fit_box(evaluator, l: int, m: int, start: float, growths: int = 8):
     r_max = float(start)
     r, cumulative = radial_mass(evaluator, l, m, r_max)
@@ -124,7 +117,6 @@ def _fit_box(evaluator, l: int, m: int, start: float, growths: int = 8):
         r, cumulative = radial_mass(evaluator, l, m, r_max)
     half_width = float(np.interp(_BOX_CAPTURE, cumulative, r))
     return half_width, r, cumulative
-
 
 def solve_level(grid: np.ndarray, cell_volume: float, target: float) -> float:
     if not 0.0 < target < 1.0:
@@ -143,16 +135,13 @@ def solve_level(grid: np.ndarray, cell_volume: float, target: float) -> float:
     t = 0.0 if span == 0.0 else (target - cumulative[idx - 1]) / span
     return float(flat[idx - 1] + t * (flat[idx] - flat[idx - 1]))
 
-
 def fraction_above(grid: np.ndarray, cell_volume: float, level: float) -> float:
     return float(grid[grid >= level].sum() * cell_volume)
-
 
 def _phase_at(evaluator, vertices: np.ndarray) -> np.ndarray:
     if vertices.shape[0] == 0:
         return np.zeros(0)
     return np.angle(evaluator(vertices).values)
-
 
 def _build(
     evaluator,
@@ -294,7 +283,6 @@ def _build(
         provenance=provenance,
     )
 
-
 def isosurface(
     n: int,
     l: int,
@@ -331,7 +319,6 @@ def isosurface(
         progress=progress,
     )
 
-
 def screened_isosurface(
     z: int,
     n_electrons: int,
@@ -367,7 +354,6 @@ def screened_isosurface(
         refinement="raise the grid resolution, widen the box, or use Hartree-Fock",
         progress=progress,
     )
-
 
 def hf_isosurface(
     z: int,

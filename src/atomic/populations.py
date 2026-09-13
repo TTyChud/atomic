@@ -25,10 +25,8 @@ _SAHA_COEFF: float = 2.0 * math.pi * _sc.m_e * _sc.k / (_sc.h**2)
 
 _L_SYMBOLS = "spdfghiklmnoqrtuv"
 
-
 def _l_symbol(l: int) -> str:
     return _L_SYMBOLS[l] if l < len(_L_SYMBOLS) else f"l={l}"
-
 
 _LTE = (
     "LTE (local thermodynamic equilibrium): one temperature sets both the "
@@ -36,7 +34,6 @@ _LTE = (
     "optically thin: no radiative transfer, no self-absorption, no escape "
     "probability",
 )
-
 
 @dataclass(frozen=True)
 class Level:
@@ -46,13 +43,11 @@ class Level:
     energy_ev: float
     degeneracy: int
 
-
 @dataclass(frozen=True)
 class ThermalConditions:
 
     temperature_k: float
     electron_density_cm3: float
-
 
 @dataclass(frozen=True)
 class ThermalState:
@@ -61,10 +56,8 @@ class ThermalState:
     ionized_fraction: Quantity
     partition_function: Quantity
 
-
 def level_degeneracy(l: int, j: float | None) -> int:
     return int(round(2.0 * j + 1.0)) if j is not None else 2 * (2 * l + 1)
-
 
 def hydrogen_levels(n_max: int, fine_structure: bool = False) -> tuple[Level, ...]:
     if n_max < 1:
@@ -87,11 +80,9 @@ def hydrogen_levels(n_max: int, fine_structure: bool = False) -> tuple[Level, ..
                 ))
     return tuple(levels)
 
-
 def _check_temperature(temperature_k: float) -> None:
     if temperature_k <= 0.0:
         raise ValueError(f"temperature must be > 0 K, got {temperature_k}")
-
 
 def _truncation_note(levels: tuple[Level, ...]) -> tuple[str, ...]:
     n_max = max(x.n for x in levels)
@@ -100,7 +91,6 @@ def _truncation_note(levels: tuple[Level, ...]) -> tuple[str, ...]:
         "diverges, since infinitely many bound states crowd the ionization "
         "limit carrying unbounded statistical weight",
     )
-
 
 def partition_function(levels: tuple[Level, ...], temperature_k: float) -> Quantity:
     _check_temperature(temperature_k)
@@ -121,7 +111,6 @@ def partition_function(levels: tuple[Level, ...], temperature_k: float) -> Quant
             ),
         ),
     )
-
 
 def boltzmann_fractions(
     levels: tuple[Level, ...], temperature_k: float
@@ -148,7 +137,6 @@ def boltzmann_fractions(
         )
         for x, w in zip(levels, weights, strict=True)
     )
-
 
 def saha_ionization_fraction(
     temperature_k: float,
@@ -196,7 +184,6 @@ def saha_ionization_fraction(
         ),
     )
 
-
 def level_column_fraction(
     lower_fraction: float,
     neutral_fraction: float,
@@ -223,7 +210,6 @@ def level_column_fraction(
             ),
         ),
     )
-
 
 def line_emissivity(
     upper_fraction: float,

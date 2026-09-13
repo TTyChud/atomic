@@ -20,7 +20,6 @@ class WavefunctionValues:
     basis: str
     provenance: Provenance
 
-
 def evaluate_state(
     n: int,
     l: int,

@@ -17,7 +17,6 @@ class RadialSolution:
     mu_ratio: float
     provenance: Provenance
 
-
 def solve_radial(
     potential: Callable[[np.ndarray], np.ndarray],
     l: int = 0,
@@ -76,7 +75,6 @@ def solve_radial(
     return RadialSolution(
         r=r, u=u, energies=energies, l=l, mu_ratio=mu_ratio, provenance=provenance
     )
-
 
 def solve_radial_with_error(
     potential: Callable[[np.ndarray], np.ndarray],

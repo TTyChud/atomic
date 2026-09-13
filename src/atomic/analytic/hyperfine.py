@@ -29,7 +29,6 @@ _HF_METHOD = (
     "A = (2/3) g_e g_I (m_e/m_p) alpha^2 (mu/m_e)^3 Z^3/n^3"
 )
 
-
 def hyperfine_constant(
     n: int, Z: int = 1, mu_ratio: float = 1.0, g_I: float = 0.0,
     alpha: float = ALPHA,
@@ -67,19 +66,16 @@ def hyperfine_constant(
         ),
     )
 
-
 @dataclass(frozen=True)
 class HyperfineLevel:
     F: float
     shift: Quantity
     energy: Quantity
 
-
 def _f_values(I: float, J: float) -> list[float]:
     lo = abs(I - J)
     n_steps = round(I + J - lo)
     return [lo + k for k in range(n_steps + 1)]
-
 
 def hyperfine_levels(
     n: int, I: float, Z: int = 1, mu_ratio: float = 1.0, g_I: float = 0.0,
@@ -118,8 +114,6 @@ def hyperfine_levels(
         ))
     return out
 
-
-
 @dataclass(frozen=True)
 class Nucleus:
     name: str
@@ -127,10 +121,8 @@ class Nucleus:
     g_I: float
     note: str = ""
 
-
 def _gI_from_codata(moment_ratio_name: str, spin: float) -> float:
     return _sc.physical_constants[moment_ratio_name][0] / spin
-
 
 _NUCLEI: dict[str, Nucleus] = {
     "h": Nucleus("proton", 0.5,
@@ -151,7 +143,6 @@ _UNAVAILABLE: dict[str, str] = {
             "enter the coupling, so the electron-contact formula does not apply",
 }
 
-
 @dataclass(frozen=True)
 class HyperfineReport:
     available: bool
@@ -163,7 +154,6 @@ class HyperfineReport:
     levels: tuple[HyperfineLevel, ...] = ()
     note: str | None = None
     reason: str | None = None
-
 
 def hyperfine_report(n: int, system: System) -> HyperfineReport:
     key = system.key

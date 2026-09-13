@@ -148,7 +148,6 @@ _NO_PAULI_WITH_EXCHANGE = (
     "caller that asked for both was asking for something that does not exist."
 )
 
-
 @dataclass(frozen=True)
 class HFOrbital:
     n: int
@@ -156,7 +155,6 @@ class HFOrbital:
     occupancy: int
     energy: Quantity
     P: Field
-
 
 @dataclass(frozen=True)
 class HFResult:
@@ -178,12 +176,10 @@ class HFResult:
     converged: bool
     provenance: Provenance
 
-
 def hf_mesh(z: int, n_electrons: int, n_top: int, refinement: int = 1) -> RadialMesh:
     z_net = max(z - n_electrons + 1, 1)
     r_max = min(60.0, 12.0 * (n_top + 1) ** 2 / z_net)
     return mesh_for_atom_at_step(z, r_max, _MESH_STEP / refinement)
-
 
 def _start_potential(z: int, n_electrons: int):
     if n_electrons == 1:
@@ -193,7 +189,6 @@ def _start_potential(z: int, n_electrons: int):
     except ValueError:
         return lambda rr: -float(z) / np.asarray(rr, dtype=float)
     return screened_potential(z, n_electrons)
-
 
 def _guess_from_central_field(
     z: int, n_electrons: int, config: Configuration, mesh: RadialMesh
@@ -213,7 +208,6 @@ def _guess_from_central_field(
         for (n, l), q in config
     )
 
-
 def _refine(
     coarse: SCFSolution, coarse_mesh: RadialMesh, fine: RadialMesh
 ) -> tuple[Subshell, ...]:
@@ -228,12 +222,10 @@ def _refine(
         for a in coarse.subshells
     )
 
-
 def _relativistic_scale(z: int) -> float:
     schrodinger = hydrogen_energy(1, Z=z).value
     relativistic = dirac_energy(1, 0.5, Z=z).value
     return abs(relativistic - schrodinger) / abs(schrodinger)
-
 
 def _energy_assumptions(
     config: Configuration, z: int, exchange: bool = True, pauli: bool = True
@@ -265,7 +257,6 @@ def _energy_assumptions(
             out.append(_MULTI_TERM_ASSUMPTION)
     return tuple(out)
 
-
 def _solve_on_grid(
     z: int,
     n_electrons: int,
@@ -288,7 +279,6 @@ def _solve_on_grid(
     return solution, energies, total_energy_direct(
         z, solution.subshells, mesh, exchange=exchange
     )
-
 
 @lru_cache(maxsize=8)
 def solve_hartree_fock(
@@ -415,7 +405,6 @@ def solve_hartree_fock(
         provenance=energy_prov,
     )
 
-
 def hf_valence_ionization_energy(result: HFResult) -> Quantity:
     occupied = [o for o in result.orbitals if o.occupancy > 0]
     if not occupied:
@@ -437,7 +426,6 @@ def hf_valence_ionization_energy(result: HFResult) -> Quantity:
         ),
     )
     return Quantity(-valence.energy.value, "hartree", "IE_valence", prov)
-
 
 def hf_exchange_energy(z: int, n_electrons: int, config: Configuration) -> Quantity:
     with_exchange = solve_hartree_fock(z, n_electrons, config, True)
@@ -472,7 +460,6 @@ def hf_exchange_energy(z: int, n_electrons: int, config: Configuration) -> Quant
         ),
     )
 
-
 def hf_mean_radius(result: HFResult) -> Quantity:
     n_top = max(n for (n, _), _ in result.config)
     mesh = hf_mesh(result.z, result.n_electrons, n_top, refinement=2)
@@ -495,7 +482,6 @@ def hf_mean_radius(result: HFResult) -> Quantity:
             refinement=base.refinement,
         ),
     )
-
 
 def collapsed_variational_energy(
     z: int, n_electrons: int
@@ -527,7 +513,6 @@ def collapsed_variational_energy(
         Quantity(energy, "hartree", "E(zeta*)", prov),
     )
 
-
 @dataclass(frozen=True)
 class PauliCollapse:
 
@@ -541,7 +526,6 @@ class PauliCollapse:
     radius_ratio: Quantity
     variational_zeta: Quantity
     variational_energy: Quantity
-
 
 def pauli_collapse(z: int, n_electrons: int | None = None) -> PauliCollapse:
     if n_electrons is None:
@@ -606,14 +590,12 @@ def pauli_collapse(z: int, n_electrons: int | None = None) -> PauliCollapse:
         variational_energy=e_var,
     )
 
-
 _TOTAL_DENSITY_IS_OBSERVABLE = (
     "this one IS an observable: the total electron density, summed over every "
     "occupied subshell, is what an X-ray diffraction experiment measures. Its "
     "peaks are the shells, and the orbitals plotted elsewhere are the basis it "
     "was assembled from rather than things anyone can measure one at a time"
 )
-
 
 def hf_total_radial_density(
     z: int,
@@ -658,7 +640,6 @@ def hf_total_radial_density(
         ),
     )
 
-
 def _occupied_orbital(
     z: int,
     n_electrons: int,
@@ -687,7 +668,6 @@ def _occupied_orbital(
         f"subshell {n}{'spdf'[l]} is not occupied in Z={z}, N={n_electrons} "
         f"(which holds {held}); {why}"
     )
-
 
 def hf_radial(
     z: int,
@@ -725,7 +705,6 @@ def hf_radial(
         label=f"P_{n},{l}(r) = r^2 R^2", provenance=prov,
     )
     return r_field, p_field
-
 
 def evaluate_hf_state(
     z: int,

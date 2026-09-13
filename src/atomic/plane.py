@@ -13,7 +13,6 @@ from atomic.screened_atom import evaluate_screened_state
 
 _ROW_CHUNKS = 16
 
-
 def _plane_values(evaluator, quantity, resolution, half_extent, progress):
     axis = np.linspace(-half_extent, half_extent, resolution)
     values = np.zeros((resolution, resolution))
@@ -36,7 +35,6 @@ def _plane_values(evaluator, quantity, resolution, half_extent, progress):
             progress(i1 / resolution)
     return values, axis, psi_assumptions
 
-
 @dataclass(frozen=True)
 class PlaneGrid:
     values: np.ndarray
@@ -52,10 +50,8 @@ class PlaneGrid:
     basis: str
     provenance: Provenance
 
-
 def default_half_extent(n: int, Z: int = 1, mu_ratio: float = 1.0) -> float:
     return 2.5 * n * n / (Z * mu_ratio)
-
 
 def plane_grid(
     n: int,
@@ -112,7 +108,6 @@ def plane_grid(
         values=values, axis=axis, quantity=quantity, unit=unit, label=label,
         n=n, l=l, m=m, Z=Z, mu_ratio=mu_ratio, basis=basis, provenance=provenance,
     )
-
 
 def screened_plane_grid(
     z: int,
@@ -172,7 +167,6 @@ def screened_plane_grid(
         values=values, axis=axis, quantity=quantity, unit=unit, label=label,
         n=n, l=l, m=m, Z=z, mu_ratio=1.0, basis=basis, provenance=provenance,
     )
-
 
 def hf_plane_grid(
     z: int,

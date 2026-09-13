@@ -8,7 +8,6 @@ _CORNER_OFFSETS = np.array(
     [(di, dj, dk) for di in (0, 1) for dj in (0, 1) for dk in (0, 1)], dtype=np.int64
 )
 
-
 def _kuhn_tetrahedra() -> np.ndarray:
     tets = []
     for order in permutations(range(3)):
@@ -20,13 +19,11 @@ def _kuhn_tetrahedra() -> np.ndarray:
         tets.append(path)
     return np.array(tets, dtype=np.int64)
 
-
 _TETS = _kuhn_tetrahedra()
 
 _TET_EDGES = np.array([(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)], dtype=np.int64)
 _EDGE_OF = {(a, b): e for e, (a, b) in enumerate(map(tuple, _TET_EDGES))}
 _EDGE_OF.update({(b, a): e for (a, b), e in list(_EDGE_OF.items())})
-
 
 def _tet_cases() -> np.ndarray:
     cases = np.full((16, 2, 3), -1, dtype=np.int8)
@@ -47,9 +44,7 @@ def _tet_cases() -> np.ndarray:
             cases[code, 1] = [rim[0], rim[2], rim[3]]
     return cases
 
-
 _TET_CASES = _tet_cases()
-
 
 @dataclass(frozen=True)
 class Mesh:
@@ -60,7 +55,6 @@ class Mesh:
     @property
     def is_empty(self) -> bool:
         return self.triangles.shape[0] == 0
-
 
 def marching_tets(
     field: np.ndarray,
@@ -159,18 +153,15 @@ def marching_tets(
     unique, first, inverse = np.unique(all_keys, return_index=True, return_inverse=True)
     return Mesh(all_points[first], inverse.reshape(-1, 3).astype(np.int32))
 
-
 def _unflatten(flat_ids: np.ndarray, strides: np.ndarray) -> np.ndarray:
     i, rest = np.divmod(flat_ids, strides[0])
     j, k = np.divmod(rest, strides[1])
     return np.stack([i, j, k], axis=-1).astype(np.float64)
 
-
 def _inside_centroid(ids, inside, strides, spacing, origin):
     positions = _unflatten(ids, strides) * spacing + origin
     weights = inside.astype(np.float64)
     return (positions * weights[..., None]).sum(axis=1) / weights.sum(axis=1)[:, None]
-
 
 def enclosed_volume(mesh: Mesh) -> float:
     if mesh.is_empty:
@@ -178,13 +169,11 @@ def enclosed_volume(mesh: Mesh) -> float:
     v = mesh.vertices[mesh.triangles]
     return float(np.einsum("ij,ij->i", v[:, 0], np.cross(v[:, 1], v[:, 2])).sum() / 6.0)
 
-
 def surface_area(mesh: Mesh) -> float:
     if mesh.is_empty:
         return 0.0
     v = mesh.vertices[mesh.triangles]
     return float(np.linalg.norm(np.cross(v[:, 1] - v[:, 0], v[:, 2] - v[:, 0]), axis=1).sum() / 2)
-
 
 def edge_use_counts(mesh: Mesh) -> np.ndarray:
     tri = mesh.triangles.astype(np.int64)
@@ -193,7 +182,6 @@ def edge_use_counts(mesh: Mesh) -> np.ndarray:
     hi = pairs.max(axis=1)
     _, counts = np.unique(lo * (mesh.vertices.shape[0] + 1) + hi, return_counts=True)
     return counts
-
 
 def connected_components(mesh: Mesh) -> int:
     if mesh.is_empty:

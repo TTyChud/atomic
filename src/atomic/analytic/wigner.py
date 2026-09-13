@@ -6,7 +6,6 @@ __all__ = ["triangular", "wigner_3j", "wigner_6j"]
 
 _CACHE_SIZE = 4096
 
-
 def _doubled(j: float, name: str) -> int:
     two_j = round(2 * j)
     if abs(2 * j - two_j) > 1e-9:
@@ -15,16 +14,13 @@ def _doubled(j: float, name: str) -> int:
         raise ValueError(f"{name} must be non-negative, got {j}")
     return two_j
 
-
 def _triangular_doubled(a2: int, b2: int, c2: int) -> bool:
     if (a2 + b2 + c2) % 2 != 0:
         return False
     return abs(a2 - b2) <= c2 <= a2 + b2
 
-
 def triangular(a: float, b: float, c: float) -> bool:
     return _triangular_doubled(_doubled(a, "a"), _doubled(b, "b"), _doubled(c, "c"))
-
 
 def _delta(a2: int, b2: int, c2: int) -> float:
     return math.sqrt(
@@ -33,7 +29,6 @@ def _delta(a2: int, b2: int, c2: int) -> float:
         * math.factorial((-a2 + b2 + c2) // 2)
         / math.factorial((a2 + b2 + c2) // 2 + 1)
     )
-
 
 @lru_cache(maxsize=_CACHE_SIZE)
 def wigner_6j(
@@ -73,13 +68,11 @@ def wigner_6j(
 
     return prefactor * total
 
-
 def _doubled_m(m: float, name: str) -> int:
     two_m = round(2 * m)
     if abs(2 * m - two_m) > 1e-9:
         raise ValueError(f"{name} must be integer or half-integer, got {m}")
     return two_m
-
 
 @lru_cache(maxsize=_CACHE_SIZE)
 def wigner_3j(

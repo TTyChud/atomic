@@ -6,13 +6,11 @@ from atomic.provenance import Fidelity, Provenance, Quantity
 
 _MULT_NAMES = ("hbar", "e", "m_e", "eps0", "c")
 
-
 @dataclass(frozen=True)
 class DerivedObservable:
     quantity: Quantity
     ratio: float
     changed: bool
-
 
 @dataclass(frozen=True)
 class ConstantsReport:
@@ -20,7 +18,6 @@ class ConstantsReport:
     bohr_radius_pm: DerivedObservable
     hartree_ev: DerivedObservable
     altered: bool
-
 
 def _observable(
     label: str, unit: str, alt_value: float, real_value: float,
@@ -47,7 +44,6 @@ def _observable(
         ratio=ratio,
         changed=changed,
     )
-
 
 def analyze_constants(
     hbar: float = 1.0, e: float = 1.0, m_e: float = 1.0,

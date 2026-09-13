@@ -16,7 +16,6 @@ __all__ = [
     "same_shell_coefficient",
 ]
 
-
 @dataclass(frozen=True)
 class Subshell:
 
@@ -25,18 +24,15 @@ class Subshell:
     q: int
     p: np.ndarray
 
-
 def same_shell_coefficient(l_a: int, k: int, q_a: int) -> float:
     if k <= 0:
         raise ValueError(f"same-shell exchange needs k > 0, got {k}")
     tj = wigner_3j(l_a, k, l_a, 0, 0, 0)
     return (q_a - 1) * ((2 * l_a + 1) / (4 * l_a + 1)) * tj * tj
 
-
 def exchange_coefficient(l_a: int, k: int, l_b: int, q_b: int) -> float:
     tj = wigner_3j(l_a, k, l_b, 0, 0, 0)
     return 0.5 * q_b * tj * tj
-
 
 def direct_potential(
     subshells: tuple[Subshell, ...], a_index: int, r: np.ndarray
@@ -49,7 +45,6 @@ def direct_potential(
             v = v + b.q * geometry.potential(b.p, b.p)
     return v
 
-
 @dataclass(frozen=True)
 class ExchangeOperator:
 
@@ -60,7 +55,6 @@ class ExchangeOperator:
         for coefficient, partner, geometry in self.terms:
             out += coefficient * geometry.potential(partner, psi) * partner
         return out
-
 
 def exchange_operator(
     subshells: tuple[Subshell, ...], a_index: int, r: np.ndarray
@@ -89,7 +83,6 @@ def exchange_operator(
                 terms.append((c, b.p, geometry(k)))
 
     return ExchangeOperator(terms=tuple(terms))
-
 
 def exchange_apply(
     subshells: tuple[Subshell, ...], a_index: int, psi: np.ndarray, r: np.ndarray

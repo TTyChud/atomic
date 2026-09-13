@@ -15,7 +15,6 @@ _S_ASSUMPTIONS = (
     "alpha does not move this shift",
 )
 
-
 @dataclass(frozen=True)
 class StarkSublevel:
     n1: int
@@ -23,7 +22,6 @@ class StarkSublevel:
     m: int
     k: int
     energy: Quantity
-
 
 def stark_sublevels(
     n: int, Z: int = 1, mu_ratio: float = 1.0, field_mv_per_m: float = 0.0,

@@ -14,11 +14,9 @@ _FS_ASSUMPTIONS = (
     "no Lamb shift or QED, and no hyperfine structure",
 )
 
-
 def validate_j(l: int, j: float) -> None:
     if j < 0.5 or abs(abs(j - l) - 0.5) > 1e-12:
         raise ValueError(f"j must be l +/- 1/2 (and >= 1/2), got l={l}, j={j}")
-
 
 def fine_structure_shift(
     n: int, l: int, j: float, Z: int = 1, mu_ratio: float = 1.0,
@@ -47,7 +45,6 @@ def fine_structure_shift(
             refinement="solving Dirac hydrogen exactly instead (analytic/dirac.py)",
         ),
     )
-
 
 def level_energy(
     n: int, l: int, j: float, Z: int = 1, mu_ratio: float = 1.0,

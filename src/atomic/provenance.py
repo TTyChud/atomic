@@ -12,12 +12,10 @@ class Fidelity(Enum):
     COUNTERFACTUAL = "counterfactual"
     VISUAL_LIBERTY = "visual_liberty"
 
-
 def _require_nonempty_str(name: str, value: object) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{name} must be a non-empty string, got {value!r}")
     return value
-
 
 def _require_finite_nonnegative_or_none(name: str, value: float | None) -> float | None:
     if value is None:
@@ -30,7 +28,6 @@ def _require_finite_nonnegative_or_none(name: str, value: float | None) -> float
     if v < 0.0:
         raise ValueError(f"{name} must be >= 0, got {value!r}")
     return v
-
 
 @dataclass(frozen=True)
 class Provenance:
@@ -60,7 +57,6 @@ class Provenance:
         if self.refinement is not None:
             _require_nonempty_str("refinement", self.refinement)
 
-
 @dataclass(frozen=True)
 class Quantity:
     value: float
@@ -75,7 +71,6 @@ class Quantity:
         if np.isnan(v):
             raise ValueError("value must not be NaN (use inf for unbounded, never silence)")
 
-
         _require_nonempty_str("unit", self.unit)
         _require_nonempty_str("label", self.label)
         if not isinstance(self.provenance, Provenance):
@@ -83,7 +78,6 @@ class Quantity:
                 f"provenance must be a Provenance, got {type(self.provenance).__name__}"
             )
         object.__setattr__(self, "value", v)
-
 
 @dataclass(frozen=True)
 class Field:

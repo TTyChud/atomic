@@ -12,9 +12,7 @@ __all__ = [
     "uniform_mesh",
 ]
 
-
 _OPTIMAL_SCALED_INNER_RADIUS = 1.0e-3
-
 
 @dataclass(frozen=True)
 class RadialMesh:
@@ -137,13 +135,10 @@ class RadialMesh:
 
         diag = self.kinetic_diag + l * (l + 1) * 0.5 / self.r**2 + v
 
-
         diag = diag.copy()
         diag[0] += self.inner_wall_coupling * self.inner_ghost_ratio ** (l + 1.5)
 
-
         return diag, self.kinetic_offdiag.copy()
-
 
 def uniform_mesh(r_max: float, points: int) -> RadialMesh:
     if r_max <= 0.0:
@@ -161,7 +156,6 @@ def uniform_mesh(r_max: float, points: int) -> RadialMesh:
         inner_ghost_ratio=0.0,
     )
 
-
 def exponential_mesh(r_min: float, r_max: float, points: int) -> RadialMesh:
     if r_min <= 0.0:
         raise ValueError(
@@ -177,7 +171,6 @@ def exponential_mesh(r_min: float, r_max: float, points: int) -> RadialMesh:
     r = r_min * np.exp(delta * np.arange(points))
     ghost = float(np.exp(-delta))
 
-
     return RadialMesh(
         r=r,
         jacobian=r.copy(),
@@ -188,12 +181,10 @@ def exponential_mesh(r_min: float, r_max: float, points: int) -> RadialMesh:
         inner_ghost_ratio=ghost,
     )
 
-
 def mesh_for_atom(z: int, r_max: float, points: int) -> RadialMesh:
     if z < 1:
         raise ValueError(f"Z must be >= 1, got {z}")
     return exponential_mesh(_OPTIMAL_SCALED_INNER_RADIUS / z, r_max, points)
-
 
 def mesh_for_atom_at_step(z: int, r_max: float, step: float) -> RadialMesh:
     if z < 1:
@@ -205,7 +196,6 @@ def mesh_for_atom_at_step(z: int, r_max: float, step: float) -> RadialMesh:
         raise ValueError(f"box radius {r_max!r} must exceed inner radius {r_min!r}")
     points = int(np.log(r_max / r_min) / step) + 1
     return exponential_mesh(r_min, r_max, points)
-
 
 def display_window(
     r: NDArray[np.float64],

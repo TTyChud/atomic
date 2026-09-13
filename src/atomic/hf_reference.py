@@ -10,7 +10,6 @@ HF_REFERENCE = json.loads(
 
 __all__ = ["HF_REFERENCE", "load_hf_reference"]
 
-
 def load_hf_reference(symbol: str) -> dict:
     try:
         return HF_REFERENCE["values"][symbol]

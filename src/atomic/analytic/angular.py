@@ -17,7 +17,6 @@ _CHEMISTRY_LABELS = {
     (3, 3): "f_x(x2-3y2)", (3, -3): "f_y(3x2-y2)",
 }
 
-
 @dataclass(frozen=True)
 class AngularValues:
 
@@ -29,13 +28,11 @@ class AngularValues:
     basis: str
     provenance: Provenance
 
-
 def validate_angular(l: int, m: int) -> None:
     if l < 0:
         raise ValueError(f"l must be >= 0, got {l}")
     if abs(m) > l:
         raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
-
 
 def real_orbital_label(l: int, m: int) -> str:
     validate_angular(l, m)
@@ -46,7 +43,6 @@ def real_orbital_label(l: int, m: int) -> str:
         return f"{letter}(m=0)"
     kind = "cos" if m > 0 else "sin"
     return f"{letter}(m={m:+d}, {kind})"
-
 
 def spherical_harmonic(
     l: int, m: int, theta: np.ndarray, phi: np.ndarray, basis: str = "complex"

@@ -15,10 +15,8 @@ _WEAKNESS = {
     Fidelity.COUNTERFACTUAL: 3,
 }
 
-
 def _weaker(a: Fidelity, b: Fidelity) -> Fidelity:
     return a if _WEAKNESS[a] >= _WEAKNESS[b] else b
-
 
 def _common_grid(a: Field, b: Field, points: int) -> np.ndarray:
     lo = max(a.grid[0], b.grid[0])
@@ -29,7 +27,6 @@ def _common_grid(a: Field, b: Field, points: int) -> np.ndarray:
             f"{a.grid[-1]:.3g}] and [{b.grid[0]:.3g}, {b.grid[-1]:.3g}]"
         )
     return np.geomspace(lo, hi, points)
-
 
 def _resample(f: Field, grid: np.ndarray) -> Field:
     return dataclasses.replace(
@@ -43,18 +40,14 @@ def _resample(f: Field, grid: np.ndarray) -> Field:
         ),
     )
 
-
 def _displaced_charge(grid: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
     return 0.5 * float(np.trapezoid(np.abs(a - b), grid))
-
 
 def _window_loss(f: Field, grid: np.ndarray) -> float:
     inside = np.trapezoid(np.interp(grid, f.grid, f.values), grid)
     return abs(float(np.trapezoid(f.values, f.grid) - inside))
 
-
 SHELL_LABELS = ("K", "L", "M", "N", "O")
-
 
 @dataclass(frozen=True)
 class ShellPeak:
@@ -63,7 +56,6 @@ class ShellPeak:
     hf_radius: float | None
     gsz_depth: float | None
     hf_depth: float | None
-
 
 @dataclass(frozen=True)
 class DensityComparison:
@@ -74,9 +66,7 @@ class DensityComparison:
     shells: tuple[ShellPeak, ...]
     provenance: Provenance
 
-
 _NOISE_FLOOR = 1e-8
-
 
 def _peaks_with_depth(
     grid: np.ndarray, values: np.ndarray
@@ -103,7 +93,6 @@ def _peaks_with_depth(
         out.append((float(grid[i]), float((values[i] - valley) / values[i])))
     return out
 
-
 def _shell_table(
     grid: np.ndarray, gsz: np.ndarray, hf: np.ndarray, config: Configuration
 ) -> tuple[ShellPeak, ...]:
@@ -129,7 +118,6 @@ def _shell_table(
             )
         )
     return tuple(rows)
-
 
 def compare_total_densities(
     z: int,

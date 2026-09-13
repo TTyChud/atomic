@@ -15,7 +15,6 @@ B0_TESLA: float = _sc.physical_constants["atomic unit of mag. flux density"][0]
 
 E0_V_PER_M: float = _sc.physical_constants["atomic unit of electric field"][0]
 
-
 @dataclass(frozen=True)
 class FundamentalConstants:
     hbar: float
@@ -57,7 +56,6 @@ class FundamentalConstants:
     @property
     def hartree_energy(self) -> float:
         return self.hbar**2 / (self.m_e * self.bohr_radius**2)
-
 
     @property
     def hartree_ev(self) -> float:

@@ -12,20 +12,17 @@ _EXACT_ASSUMPTIONS = (
     "no external fields",
 )
 
-
 def validate_quantum_numbers(n: int, l: int = 0) -> None:
     if n < 1:
         raise ValueError(f"principal quantum number n must be >= 1, got {n}")
     if not 0 <= l < n:
         raise ValueError(f"orbital quantum number l must satisfy 0 <= l < n, got l={l}, n={n}")
 
-
 def _validate_physical(Z: int, mu_ratio: float) -> None:
     if Z < 1:
         raise ValueError(f"nuclear charge Z must be >= 1, got {Z}")
     if not mu_ratio > 0:
         raise ValueError(f"reduced-mass ratio must be positive, got {mu_ratio}")
-
 
 def energy(n: int, Z: int = 1, mu_ratio: float = 1.0) -> Quantity:
     validate_quantum_numbers(n)
@@ -42,7 +39,6 @@ def energy(n: int, Z: int = 1, mu_ratio: float = 1.0) -> Quantity:
         ),
     )
 
-
 def _radial_eval(n: int, l: int, r: np.ndarray, kappa: float) -> np.ndarray:
     rho = 2.0 * kappa * r / n
     norm = math.sqrt(
@@ -51,7 +47,6 @@ def _radial_eval(n: int, l: int, r: np.ndarray, kappa: float) -> np.ndarray:
         / (2.0 * n * math.factorial(n + l))
     )
     return norm * np.exp(-rho / 2.0) * rho**l * eval_genlaguerre(n - l - 1, 2 * l + 1, rho)
-
 
 def radial_wavefunction(
     n: int, l: int, r: np.ndarray, Z: int = 1, mu_ratio: float = 1.0
@@ -74,7 +69,6 @@ def radial_wavefunction(
         ),
     )
 
-
 def mean_radius(n: int, l: int, Z: int = 1, mu_ratio: float = 1.0) -> Quantity:
     validate_quantum_numbers(n, l)
     _validate_physical(Z, mu_ratio)
@@ -89,7 +83,6 @@ def mean_radius(n: int, l: int, Z: int = 1, mu_ratio: float = 1.0) -> Quantity:
             assumptions=_EXACT_ASSUMPTIONS,
         ),
     )
-
 
 def angular_momentum_magnitude(l: int) -> Quantity:
     if l < 0:
