@@ -53,12 +53,35 @@ def _costheta_inverse_cdf(l: int, m: int):
 def _phi_inverse_cdf(m: int):
     phi = np.linspace(0.0, 2.0 * np.pi, _X_GRID_POINTS)
     am = abs(m)
-    if m > 0:
-        cdf = (phi / 2.0 + np.sin(2.0 * am * phi) / (4.0 * am)) / np.pi
-    else:
-        cdf = (phi / 2.0 - np.sin(2.0 * am * phi) / (4.0 * am)) / np.pi
+    sign = 1.0 if m > 0 else -1.0
+    cdf = (phi / 2.0 + sign * np.sin(2.0 * am * phi) / (4.0 * am)) / np.pi
     cdf /= cdf[-1]
     return phi, cdf
+
+
+def _validate_sampling_request(n: int, l: int, m: int, count: int, basis: str) -> None:
+    """Checks shared by every sampler; one place, one wording."""
+    validate_quantum_numbers(n, l)
+    if abs(m) > l:
+        raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
+    if count < 1:
+        raise ValueError(f"count must be positive, got {count}")
+    if basis not in ("complex", "real"):
+        raise ValueError(f"basis must be 'complex' or 'real', got {basis!r}")
+
+
+def _phi_description(phi_sampler: tuple[np.ndarray, np.ndarray] | None) -> str:
+    if phi_sampler is None:
+        return "phi uniform (|Y_lm|^2 is phi-independent)"
+    return "phi from analytic real-basis marginal (cos^2/sin^2 m phi)"
+
+
+def _sampling_assumptions(seed: int, count: int, basis: str) -> tuple[str, str, str]:
+    return (
+        f"uses the {basis} angular basis",
+        f"drawn from RNG PCG64 seed={seed}, count={count}",
+        "positions are reported in bohr",
+    )
 
 
 def _draw_positions(count, r_grid, r_cdf, x_grid, x_cdf, phi_sampler, seed, n_chunks, progress):
@@ -101,13 +124,7 @@ def sample_density(
     n_chunks: int = 10,
     basis: str = "complex",
 ) -> SampleCloud:
-    validate_quantum_numbers(n, l)
-    if abs(m) > l:
-        raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
-    if count < 1:
-        raise ValueError(f"count must be positive, got {count}")
-    if basis not in ("complex", "real"):
-        raise ValueError(f"basis must be 'complex' or 'real', got {basis!r}")
+    _validate_sampling_request(n, l, m, count, basis)
 
     phi_sampler = _phi_inverse_cdf(m) if (basis == "real" and m != 0) else None
     r_grid, r_cdf, r_max = _radial_inverse_cdf(n, l, Z, mu_ratio)
@@ -115,11 +132,7 @@ def sample_density(
     positions = _draw_positions(
         count, r_grid, r_cdf, x_grid, x_cdf, phi_sampler, seed, n_chunks, progress
     )
-    phi_desc = (
-        "phi uniform (|Y_lm|^2 is phi-independent)"
-        if phi_sampler is None
-        else "phi from analytic real-basis marginal (cos^2/sin^2 m phi)"
-    )
+    phi_desc = _phi_description(phi_sampler)
     provenance = Provenance(
         fidelity=Fidelity.NUMERICAL,
         method=(
@@ -128,11 +141,7 @@ def sample_density(
             f"r_max={r_max:g} bohr), cos(theta) from |Theta_lm|^2 "
             f"(grid N={_X_GRID_POINTS}), {phi_desc}"
         ),
-        assumptions=(
-            f"uses the {basis} angular basis",
-            f"drawn from RNG PCG64 seed={seed}, count={count}",
-            "positions are reported in bohr",
-        ),
+        assumptions=_sampling_assumptions(seed, count, basis),
         refinement="raise the CDF grid resolution or the sample count",
     )
     return SampleCloud(
@@ -154,13 +163,7 @@ def sample_screened_density(
     n_chunks: int = 10,
     basis: str = "complex",
 ) -> SampleCloud:
-    validate_quantum_numbers(n, l)
-    if abs(m) > l:
-        raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
-    if count < 1:
-        raise ValueError(f"count must be positive, got {count}")
-    if basis not in ("complex", "real"):
-        raise ValueError(f"basis must be 'complex' or 'real', got {basis!r}")
+    _validate_sampling_request(n, l, m, count, basis)
 
     r_field, _ = screened_radial(z, n_electrons, n, l, points=_R_GRID_POINTS)
     r_grid, r_cdf, r_max = _radial_inverse_cdf_tabulated(r_field.grid, r_field.values)
@@ -171,11 +174,7 @@ def sample_screened_density(
     )
 
     base = screening_provenance(z, n_electrons)
-    phi_desc = (
-        "phi uniform (|Y_lm|^2 is phi-independent)"
-        if phi_sampler is None
-        else "phi from analytic real-basis marginal (cos^2/sin^2 m phi)"
-    )
+    phi_desc = _phi_description(phi_sampler)
     provenance = Provenance(
         fidelity=Fidelity.APPROXIMATION,
         method=(
@@ -185,11 +184,7 @@ def sample_screened_density(
             f"|Theta_lm|^2, {phi_desc}; {base.method}"
         ),
         assumptions=base.assumptions
-        + (
-            f"uses the {basis} angular basis",
-            f"drawn from RNG PCG64 seed={seed}, count={count}",
-            "positions are reported in bohr",
-        ),
+        + _sampling_assumptions(seed, count, basis),
         error_estimate=r_field.provenance.error_estimate,
         refinement=(
             "raise the CDF grid resolution, the sample count, "
@@ -218,13 +213,7 @@ def sample_hf_density(
     exchange: bool = True,
     pauli: bool = True,
 ) -> SampleCloud:
-    validate_quantum_numbers(n, l)
-    if abs(m) > l:
-        raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
-    if count < 1:
-        raise ValueError(f"count must be positive, got {count}")
-    if basis not in ("complex", "real"):
-        raise ValueError(f"basis must be 'complex' or 'real', got {basis!r}")
+    _validate_sampling_request(n, l, m, count, basis)
 
     r_field, _ = hf_radial(
         z, n_electrons, n, l, points=_R_GRID_POINTS,
@@ -238,11 +227,7 @@ def sample_hf_density(
     )
 
     base = r_field.provenance
-    phi_desc = (
-        "phi uniform (|Y_lm|^2 is phi-independent)"
-        if phi_sampler is None
-        else "phi from analytic real-basis marginal (cos^2/sin^2 m phi)"
-    )
+    phi_desc = _phi_description(phi_sampler)
     provenance = Provenance(
         fidelity=base.fidelity,
         method=(
@@ -252,11 +237,7 @@ def sample_hf_density(
             f"|Theta_lm|^2, {phi_desc}; {base.method}"
         ),
         assumptions=base.assumptions
-        + (
-            f"uses the {basis} angular basis",
-            f"drawn from RNG PCG64 seed={seed}, count={count}",
-            "positions are reported in bohr",
-        ),
+        + _sampling_assumptions(seed, count, basis),
         error_estimate=base.error_estimate,
         refinement=base.refinement,
     )
