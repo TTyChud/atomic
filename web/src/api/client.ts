@@ -1,8 +1,9 @@
+import { apiUrl } from "../lib/apiBase";
+import { currentEngineMode, engine } from "../engine/engine";
 import type {
   AbsorptionInfo,
   ClassicalGhost,
   ConstantsReport,
-  CurveOfGrowthInfo,
   ForceLawResult,
   HFLevels,
   JobInfo,
@@ -32,8 +33,29 @@ export function key(v: string): string {
   return encodeURIComponent(v);
 }
 
+/**
+ * Transport for every engine call.
+ *
+ * Same-origin localhost (dev, `atomic serve`, `vite preview`) routes to the
+ * in-browser engine — the real Python package running in a Web Worker, no
+ * server involved. Any other origin (a deployed UI) uses plain fetch against
+ * the network API. Absolute URLs (split deploy) always go over the network.
+ */
+async function request(url: string, init?: RequestInit): Promise<Response> {
+  if (isLocalRelative(url)) return engine.request(url, init);
+  return fetch(url, init);
+}
+
+function isLocalRelative(url: string): boolean {
+  if (/^https?:\/\//i.test(url)) return false;
+  // currentEngineMode honors the ?engine=server|device override on top of the
+  // origin policy, so the override switches the whole transport, not just the
+  // badge. Absolute URLs always go over the network regardless.
+  return currentEngineMode() === "local";
+}
+
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await request(url);
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -49,8 +71,22 @@ async function errorFrom(url: string, res: Response): Promise<Error> {
   return new Error(detail ?? `${url}: HTTP ${res.status}`);
 }
 
+/**
+ * Fetch a binary payload through the standard transport and decode it.
+ * One status-check-and-decode path for every octet-stream endpoint
+ * (job channels, thumbnails), device engine and network alike.
+ */
+async function binary<T>(
+  path: string,
+  decode: (buffer: ArrayBuffer) => T,
+): Promise<T> {
+  const res = await request(path);
+  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+  return decode(await res.arrayBuffer());
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
+  const res = await request(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -60,7 +96,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 }
 
 export function getSystems(): Promise<SystemsResponse> {
-  return getJson("/api/systems");
+  return getJson(apiUrl("/api/systems"));
 }
 
 export function getState(
@@ -69,7 +105,7 @@ export function getState(
   m: number,
   system: string,
 ): Promise<StateResponse> {
-  return getJson(`/api/state/${n}/${l}/${m}?system=${key(system)}`);
+  return getJson(apiUrl(`/api/state/${n}/${l}/${m}?system=${key(system)}`));
 }
 
 export function getRadial(
@@ -89,7 +125,9 @@ export function getRadial(
   const x = exchange ? "" : "&exchange=false";
   const pa = pauli ? "" : "&pauli=false";
   const co = compare ? "&compare=true" : "";
-  return getJson(`/api/radial/${n}/${l}?system=${key(system)}${p}${m}${c}${x}${pa}${co}`);
+  return getJson(
+    apiUrl(`/api/radial/${n}/${l}?system=${key(system)}${p}${m}${c}${x}${pa}${co}`),
+  );
 }
 
 export function getLevels(
@@ -110,7 +148,9 @@ export function getLevels(
   const e = eField > 0 ? `&e_field=${eField}` : "";
   const h = hyperfine ? "&hyperfine=true" : "";
   return getJson(
-    `/api/levels?system=${key(system)}&n_max=${nMax}&fine_structure=${fineStructure}${a}${c}${d}${b}${e}${h}`,
+    apiUrl(
+      `/api/levels?system=${key(system)}&n_max=${nMax}&fine_structure=${fineStructure}${a}${c}${d}${b}${e}${h}`,
+    ),
   );
 }
 
@@ -148,27 +188,10 @@ export function getSpectrum(
     }
   }
   return getJson(
-    `/api/spectrum?system=${key(system)}&n_max=${nMax}&fine_structure=${fineStructure}` +
-      `&intensities=${intensities}${t}${p}`,
-  );
-}
-
-export interface CurveOfGrowthParams {
-  system: string;
-  nMax: number;
-  fineStructure: boolean;
-  lambdaNm: number;
-  thermal: ThermalParams;
-  resolvingPower?: number | null;
-}
-
-export function getCurveOfGrowth(p: CurveOfGrowthParams): Promise<CurveOfGrowthInfo> {
-  const r = p.resolvingPower != null ? `&resolving_power=${num(p.resolvingPower)}` : "";
-  return getJson(
-    `/api/curve-of-growth?system=${key(p.system)}&n_max=${p.nMax}` +
-      `&fine_structure=${p.fineStructure}&lambda_nm=${num(p.lambdaNm)}` +
-      `&temperature_k=${num(p.thermal.temperatureK)}` +
-      `&electron_density_cm3=${num(p.thermal.electronDensityCm3)}${r}`,
+    apiUrl(
+      `/api/spectrum?system=${key(system)}&n_max=${nMax}&fine_structure=${fineStructure}` +
+        `&intensities=${intensities}${t}${p}`,
+    ),
   );
 }
 
@@ -188,11 +211,13 @@ export function getAbsorption(p: AbsorptionParams): Promise<AbsorptionInfo> {
     ? `&lambda_min=${num(p.window[0])}&lambda_max=${num(p.window[1])}`
     : "";
   return getJson(
-    `/api/absorption?system=${key(p.system)}&n_max=${p.nMax}` +
-      `&fine_structure=${p.fineStructure}` +
-      `&column_density_m2=${num(p.columnDensityM2)}` +
-      `&temperature_k=${num(p.thermal.temperatureK)}` +
-      `&electron_density_cm3=${num(p.thermal.electronDensityCm3)}${r}${w}`,
+    apiUrl(
+      `/api/absorption?system=${key(p.system)}&n_max=${p.nMax}` +
+        `&fine_structure=${p.fineStructure}` +
+        `&column_density_m2=${num(p.columnDensityM2)}` +
+        `&temperature_k=${num(p.thermal.temperatureK)}` +
+        `&electron_density_cm3=${num(p.thermal.electronDensityCm3)}${r}${w}`,
+    ),
   );
 }
 
@@ -206,12 +231,14 @@ export interface ConstMultipliers {
 
 export function getConstants(m: ConstMultipliers): Promise<ConstantsReport> {
   return getJson(
-    `/api/constants?hbar=${m.hbar}&e=${m.e}&m_e=${m.m_e}&eps0=${m.eps0}&c=${m.c}`,
+    apiUrl(
+      `/api/constants?hbar=${m.hbar}&e=${m.e}&m_e=${m.m_e}&eps0=${m.eps0}&c=${m.c}`,
+    ),
   );
 }
 
 export function getClassical(system: string, n: number): Promise<ClassicalGhost> {
-  return getJson(`/api/classical?system=${key(system)}&n=${n}`);
+  return getJson(apiUrl(`/api/classical?system=${key(system)}&n=${n}`));
 }
 
 export interface ForceLawParams {
@@ -232,7 +259,7 @@ export function getForceLaw(p: ForceLawParams): Promise<ForceLawResult> {
   });
   for (const [k, v] of Object.entries(p.params)) q.set(k, String(v));
   if (p.expr !== undefined) q.set("expr", p.expr);
-  return getJson(`/api/forcelaw?${q.toString()}`);
+  return getJson(apiUrl(`/api/forcelaw?${q.toString()}`));
 }
 
 export interface SampleParams {
@@ -250,7 +277,7 @@ export interface SampleParams {
 }
 
 export function createSampleJob(params: SampleParams): Promise<JobInfo> {
-  return postJson("/api/jobs/sample", { seed: 0, ...params });
+  return postJson(apiUrl("/api/jobs/sample"), { seed: 0, ...params });
 }
 
 export interface HFParams {
@@ -262,7 +289,7 @@ export interface HFParams {
 }
 
 export function createHFJob(params: HFParams): Promise<JobInfo> {
-  return postJson("/api/jobs/hf", params);
+  return postJson(apiUrl("/api/jobs/hf"), params);
 }
 
 export function isHFLevels(meta: JobMeta): meta is HFLevels {
@@ -284,7 +311,7 @@ export interface PlaneParams {
 }
 
 export function createPlaneJob(params: PlaneParams): Promise<JobInfo> {
-  return postJson("/api/jobs/plane", { resolution: 256, ...params });
+  return postJson(apiUrl("/api/jobs/plane"), { resolution: 256, ...params });
 }
 
 export interface IsoParams {
@@ -302,17 +329,17 @@ export interface IsoParams {
 }
 
 export function createIsoJob(params: IsoParams): Promise<JobInfo> {
-  return postJson("/api/jobs/isosurface", { resolution: 96, ...params });
+  return postJson(apiUrl("/api/jobs/isosurface"), { resolution: 96, ...params });
 }
 
 export async function getIndexChannel(
   jobId: string,
   channel: string,
 ): Promise<Uint32Array> {
-  const url = `/api/jobs/${jobId}/data?channel=${channel}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  return decodeIndices(await res.arrayBuffer());
+  return binary<Uint32Array>(
+    `/api/jobs/${jobId}/data?channel=${channel}`,
+    decodeIndices,
+  );
 }
 
 export function thumbnailUrl(
@@ -333,9 +360,9 @@ export function thumbnailUrl(
   const cfg = params?.config ? `&config=${encodeURIComponent(params.config)}` : "";
   const x = params?.exchange === false ? "&exchange=false" : "";
   const p = params?.pauli === false ? "&pauli=false" : "";
-  return (
+  return apiUrl(
     `/api/thumbnail/${n}/${l}/${m}?system=${key(system)}&basis=${basis}&size=${size}` +
-    `${model}${cfg}${x}${p}`
+      `${model}${cfg}${x}${p}`,
   );
 }
 
@@ -348,40 +375,20 @@ export function decodeIndices(buffer: ArrayBuffer): Uint32Array {
   return new Uint32Array(buffer);
 }
 
-export function watchJob(jobId: string, onProgress: (p: number) => void): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const proto = location.protocol === "https:" ? "wss" : "ws";
-    const ws = new WebSocket(`${proto}://${location.host}/ws/jobs/${jobId}`);
-    ws.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data as string) as {
-        status: string;
-        progress: number;
-        error: string | null;
-      };
-      onProgress(msg.progress);
-      if (msg.status === "done") {
-        ws.close();
-        resolve();
-      } else if (msg.status === "error") {
-        ws.close();
-        reject(new Error(msg.error ?? "job failed"));
-      }
-    };
-    ws.onerror = () => reject(new Error("websocket error"));
-  });
-}
-
 export function getJobMeta(jobId: string): Promise<JobMeta> {
-  return getJson(`/api/jobs/${jobId}/meta`);
+  return getJson(apiUrl(`/api/jobs/${jobId}/meta`));
 }
 
 export async function getChannel(jobId: string, channel?: string): Promise<Float32Array> {
-  const url = channel
+  const path = channel
     ? `/api/jobs/${jobId}/data?channel=${channel}`
     : `/api/jobs/${jobId}/data`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  return decodeFloats(await res.arrayBuffer());
+  return binary<Float32Array>(path, decodeFloats);
+}
+
+/** Fetch a thumbnail's bytes through the standard transport. */
+export function fetchThumbnail(url: string): Promise<Blob> {
+  return binary<Blob>(url, (buffer) => new Blob([buffer]));
 }
 
 export function decodeFloats(buffer: ArrayBuffer): Float32Array {
