@@ -72,11 +72,7 @@ export function MobileSheet({ viewportHeight }: { viewportHeight: number }) {
           {sheet === "collapsed" ? "controls" : "hide"}
         </button>
       </header>
-      {
-}
       <div className="mobile-sheet-body" inert={sheet === "collapsed"}>
-        {
-}
         <Controls />
         <InfoPanel />
       </div>
