@@ -1,0 +1,143 @@
+/// <reference lib="webworker" />
+/**
+ * The atomic engine, running in the browser.
+ *
+ * Boots Pyodide (staged under /atomic-engine/pyodide/ by
+ * scripts/stage_engine_wheel.py), installs the package's own wheel, imports
+ * the real `create_app` and answers requests by dispatching ASGI at it. No
+ * physics is re-implemented and no numbers are precomputed: this is the same
+ * `atomic` package the deployed server runs, verified by the same evidence
+ * suite — executed on the visitor's device.
+ *
+ * Protocol (postMessage in → out):
+ *   {type:"boot"}                            → "boot-phase", then "ready"
+ *   {type:"request", id, method, url, body?} → {type:"result", id, result}
+ *   any failure                              → {type:"error", id?, error}
+ *
+ * Every response crosses as {status, content_type, body_b64} so true status
+ * codes (404, 409, 422) survive the boundary — see engineCodec.
+ */
+
+import { bytesToBase64 } from "./engineCodec";
+
+interface Pyodide {
+  runPythonAsync: (code: string) => Promise<unknown>;
+  loadPackage: (names: string[]) => Promise<void>;
+}
+
+interface AsgiResult {
+  status: number;
+  content_type: string;
+  body_b64: string;
+}
+
+/** Quote a JS string as a Python string literal (JSON escaping is valid). */
+function q(s: string): string {
+  return JSON.stringify(s);
+}
+
+/** Staged runtime root, served by the dev server and the production build. */
+const STAGED_ROOT = new URL("/atomic-engine/", import.meta.url).href;
+
+// The dispatch + inline-executor shims live IN the package
+// (atomic/server/engine_shim.py), so the browser runs the same tested code
+// the deployed server ships. Boot just wires the app to them.
+const BOOT_PY = `
+from atomic.server.app import create_app
+from atomic.server.engine_shim import InlineExecutor, install_inline_threadpool, dispatch
+install_inline_threadpool()  # WASM: FastAPI's sync endpoints must not spawn threads
+_app = create_app()
+_app.state.executor = InlineExecutor()  # jobs finish inside their create call
+`;
+
+let booting: Promise<void> | null = null;
+let pyodide: Pyodide | null = null;
+
+function phase(p: "runtime" | "engine"): void {
+  postMessage({ type: "boot-phase", phase: p });
+}
+
+/** Install the package wheel straight from its same-origin URL. */
+async function installWheel(py: Pyodide): Promise<void> {
+  const manifest = (await (await fetch(`${STAGED_ROOT}manifest.json`)).json()) as {
+    wheel: string;
+  };
+  const wheelUrl = new URL(`/atomic-engine/${manifest.wheel}`, self.location.origin).href;
+  await py.runPythonAsync(
+    `import micropip; await micropip.install(${q(wheelUrl)})`,
+  );
+}
+
+async function boot(): Promise<void> {
+  phase("runtime");
+  const loadPyodide = (await import("pyodide")).loadPyodide;
+  const py = (await loadPyodide({
+    indexURL: `${STAGED_ROOT}pyodide/`,
+    stdout: (s: string) => console.log("[engine]", s),
+    stderr: (s: string) => console.warn("[engine]", s),
+  })) as unknown as Pyodide;
+
+  phase("engine");
+  // Web dependencies from the staged distribution; matplotlib powers the
+  // thumbnail endpoints. Then the package's own wheel from the VFS.
+  await py.loadPackage(["numpy", "scipy", "fastapi", "matplotlib", "micropip"]);
+  await installWheel(py);
+
+  await py.runPythonAsync(BOOT_PY);
+
+  pyodide = py;
+  const version = (await py.runPythonAsync("import atomic; atomic.__version__")) as string;
+  postMessage({ type: "ready", version: String(version) });
+}
+
+async function getPyodide(): Promise<Pyodide> {
+  if (!booting) booting = boot();
+  return booting.then(() => pyodide as Pyodide);
+}
+
+async function dispatch(
+  py: Pyodide,
+  method: string,
+  url: string,
+  body: string | null,
+): Promise<AsgiResult> {
+  const bodyB64 =
+    body !== null ? bytesToBase64(new TextEncoder().encode(body)) : null;
+  const resultJson = (await py.runPythonAsync(
+    `await dispatch(_app, ${q(method)}, ${q(url)}, ${bodyB64 === null ? "None" : q(bodyB64)})`,
+  )) as string;
+  return JSON.parse(resultJson) as AsgiResult;
+}
+
+self.onmessage = async (ev: MessageEvent) => {
+  const msg = ev.data as {
+    type: string;
+    id?: number;
+    method?: string;
+    url?: string;
+    body?: string | null;
+  };
+  if (msg.type === "boot") {
+    try {
+      await getPyodide();
+    } catch (e) {
+      booting = null;
+      postMessage({ type: "error", error: String(e) });
+    }
+    return;
+  }
+  if (msg.type === "request") {
+    try {
+      const py = await getPyodide();
+      const result = await dispatch(
+        py,
+        msg.method ?? "GET",
+        msg.url ?? "/",
+        msg.body ?? null,
+      );
+      postMessage({ type: "result", id: msg.id, result });
+    } catch (e) {
+      postMessage({ type: "error", id: msg.id, error: String(e) });
+    }
+  }
+};
