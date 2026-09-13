@@ -1,5 +1,5 @@
 import type { ColorMode } from "./urlState";
-import { densityT, lutColor, maxOf, phaseColor } from "./colormap";
+import { densityT, lutColor, maxOf, phaseColor, srgbToLinear } from "./colormap";
 import { INFERNO } from "./luts";
 
 export function buildCloudColors(
@@ -12,9 +12,9 @@ export function buildCloudColors(
     const out = new Float32Array(density.length * 3);
     for (let i = 0; i < density.length; i++) {
       const [r, g, b] = lutColor(INFERNO, densityT(density[i], vmax));
-      out[3 * i] = r / 255;
-      out[3 * i + 1] = g / 255;
-      out[3 * i + 2] = b / 255;
+      out[3 * i] = srgbToLinear(r / 255);
+      out[3 * i + 1] = srgbToLinear(g / 255);
+      out[3 * i + 2] = srgbToLinear(b / 255);
     }
     return out;
   }
@@ -22,9 +22,9 @@ export function buildCloudColors(
     const out = new Float32Array(phase.length * 3);
     for (let i = 0; i < phase.length; i++) {
       const [r, g, b] = phaseColor(phase[i]);
-      out[3 * i] = r / 255;
-      out[3 * i + 1] = g / 255;
-      out[3 * i + 2] = b / 255;
+      out[3 * i] = srgbToLinear(r / 255);
+      out[3 * i + 1] = srgbToLinear(g / 255);
+      out[3 * i + 2] = srgbToLinear(b / 255);
     }
     return out;
   }

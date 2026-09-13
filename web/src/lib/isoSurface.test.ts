@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IsoMeta } from "../api/types";
-import { phaseColor } from "./colormap";
+import { phaseColor, srgbToLinear } from "./colormap";
 import {
   buildSurfaceColors,
   componentsCaption,
@@ -55,7 +55,11 @@ describe("buildSurfaceColors", () => {
   it("uses the same phase map as the point cloud", () => {
     const colors = buildSurfaceColors(new Float32Array([0, Math.PI]));
     const [r, g, b] = phaseColor(0);
-    expect(colors.slice(0, 3)).toEqual(new Float32Array([r / 255, g / 255, b / 255]));
+    expect(colors.slice(0, 3)).toEqual(
+      new Float32Array([
+        srgbToLinear(r / 255), srgbToLinear(g / 255), srgbToLinear(b / 255),
+      ]),
+    );
     expect(colors).toHaveLength(6);
   });
 

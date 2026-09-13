@@ -5,6 +5,11 @@ export function lutColor(lut: Lut, t: number): readonly [number, number, number]
   return lut[Math.min(lut.length - 1, Math.floor(clamped * lut.length))];
 }
 
+export function srgbToLinear(c: number): number {
+  const x = Math.min(1, Math.max(0, c));
+  return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+}
+
 export const DENSITY_GAMMA = 0.5;
 
 export function densityT(value: number, vmax: number): number {
