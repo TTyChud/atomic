@@ -9,7 +9,6 @@ from atomic.server.app import create_app
 def client():
     return TestClient(create_app())
 
-
 def _line(body, n_up, l_up, n_low, l_low):
     for ln in body["lines"]:
         if (ln["n_upper"], ln["l_upper"], ln["n_lower"], ln["l_lower"]) == (
@@ -18,12 +17,10 @@ def _line(body, n_up, l_up, n_low, l_low):
             return ln
     raise AssertionError(f"no line {n_up}{l_up} -> {n_low}{l_low} in response")
 
-
 def test_intensities_absent_unless_requested(client):
     body = client.get("/api/spectrum?system=h&n_max=4").json()
     assert all(ln["einstein_a_s"] is None for ln in body["lines"])
     assert body["intensity_note"] is None
-
 
 def test_intensities_served_when_requested(client):
     body = client.get("/api/spectrum?system=h&n_max=4&intensities=true").json()
@@ -33,7 +30,6 @@ def test_intensities_served_when_requested(client):
     assert lya["oscillator_strength"]["value"] == pytest.approx(0.4162, rel=1e-2)
     assert body["intensity_note"] is None
 
-
 def test_intensity_provenance_survives_the_boundary(client):
     body = client.get("/api/spectrum?system=h&n_max=3&intensities=true").json()
     prov = body["lines"][0]["einstein_a_s"]["provenance"]
@@ -41,11 +37,9 @@ def test_intensity_provenance_survives_the_boundary(client):
     assert "Gauss-Laguerre" in prov["method"] or "dE^3" in prov["method"]
     assert prov["error_estimate"] is not None
 
-
 def test_every_served_line_has_a_positive_rate(client):
     body = client.get("/api/spectrum?system=h&n_max=5&intensities=true").json()
     assert all(ln["einstein_a_s"]["value"] > 0.0 for ln in body["lines"])
-
 
 def test_fine_structure_serves_j_resolved_intensities(client):
     body = client.get(
@@ -57,7 +51,6 @@ def test_fine_structure_serves_j_resolved_intensities(client):
     assert all(ln["j_upper"] is not None for ln in body["lines"])
     assert "6j" in body["lines"][0]["einstein_a_s"]["provenance"]["method"]
 
-
 def test_screened_atom_serves_strengths_with_the_model_error_disclosed(client):
     body = client.get("/api/spectrum?system=he&intensities=true").json()
     assert body["lines"] and all(ln["einstein_a_s"] is not None for ln in body["lines"])
@@ -67,12 +60,10 @@ def test_screened_atom_serves_strengths_with_the_model_error_disclosed(client):
     assert prov["fidelity"] == "approximation"
     assert "Green-Sellin-Zachor" in prov["method"]
 
-
 def test_screened_atom_withholds_strengths_when_not_asked(client):
     body = client.get("/api/spectrum?system=he").json()
     assert body["lines"] and all(ln["einstein_a_s"] is None for ln in body["lines"])
     assert body["intensity_note"] is None
-
 
 def test_intensities_do_not_change_wavelengths_or_comparison(client):
     plain = client.get("/api/spectrum?system=h&n_max=6").json()
@@ -81,7 +72,6 @@ def test_intensities_do_not_change_wavelengths_or_comparison(client):
         ln["wavelength_nm"]["value"] for ln in loud["lines"]
     ]
     assert plain["comparison"] == loud["comparison"]
-
 
 def test_reduced_mass_reaches_the_served_rate(client):
     h = _line(client.get("/api/spectrum?system=h&n_max=3&intensities=true").json(),

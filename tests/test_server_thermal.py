@@ -6,11 +6,9 @@ from atomic.server.app import create_app
 
 WARM = "temperature_k=10000&electron_density_cm3=1e13"
 
-
 @pytest.fixture(scope="module")
 def client():
     return TestClient(create_app())
-
 
 def _line(body, n_up, n_low):
     for ln in body["lines"]:
@@ -18,12 +16,10 @@ def _line(body, n_up, n_low):
             return ln
     raise AssertionError(f"no line {n_up} -> {n_low}")
 
-
 def test_no_conditions_means_no_emissivity(client):
     body = client.get("/api/spectrum?system=h&n_max=4&intensities=true").json()
     assert body["thermal"] is None
     assert all(ln["emissivity"] is None for ln in body["lines"])
-
 
 def test_conditions_produce_emissivity_on_every_line(client):
     body = client.get(f"/api/spectrum?system=h&n_max=6&{WARM}").json()
@@ -33,7 +29,6 @@ def test_conditions_produce_emissivity_on_every_line(client):
         "thermal implies intensities"
     )
 
-
 def test_the_conditions_come_back_with_the_answer(client):
     body = client.get(f"/api/spectrum?system=h&n_max=6&{WARM}").json()
     t = body["thermal"]
@@ -41,7 +36,6 @@ def test_the_conditions_come_back_with_the_answer(client):
     assert t["electron_density_cm3"] == 1e13
     assert 0.0 <= t["ionized_fraction"]["value"] <= 1.0
     assert t["partition_function"]["value"] >= 2.0
-
 
 def test_the_lte_assumptions_survive_the_boundary(client):
     body = client.get(f"/api/spectrum?system=h&n_max=4&{WARM}").json()
@@ -52,20 +46,17 @@ def test_the_lte_assumptions_survive_the_boundary(client):
     ion = body["thermal"]["ionized_fraction"]["provenance"]
     assert any("self-consist" in a.lower() for a in ion["assumptions"])
 
-
 def test_the_partition_function_reports_its_cutoff(client):
     body = client.get(f"/api/spectrum?system=h&n_max=6&{WARM}").json()
     prov = body["thermal"]["partition_function"]["provenance"]
     assert any("truncat" in a.lower() for a in prov["assumptions"])
     assert any("n_max=6" in a for a in prov["assumptions"])
 
-
 def test_one_knob_without_the_other_is_rejected(client):
     for query in ("temperature_k=10000", "electron_density_cm3=1e13"):
         r = client.get(f"/api/spectrum?system=h&{query}")
         assert r.status_code == 422
         assert "together" in r.json()["detail"]
-
 
 @pytest.mark.parametrize(
     "query",
@@ -79,14 +70,12 @@ def test_one_knob_without_the_other_is_rejected(client):
 def test_conditions_outside_the_display_range_are_rejected(client, query):
     assert client.get(f"/api/spectrum?system=h&{query}").status_code == 422
 
-
 def test_conditions_do_not_disturb_wavelengths(client):
     plain = client.get("/api/spectrum?system=h&n_max=6").json()
     warm = client.get(f"/api/spectrum?system=h&n_max=6&{WARM}").json()
     assert [ln["wavelength_nm"]["value"] for ln in plain["lines"]] == [
         ln["wavelength_nm"]["value"] for ln in warm["lines"]
     ]
-
 
 def test_heating_the_gas_changes_which_lines_are_bright(client):
     def order(t):
@@ -98,14 +87,12 @@ def test_heating_the_gas_changes_which_lines_are_bright(client):
 
     assert order(3000) != order(20000)
 
-
 def test_a_screened_atom_gets_conditions_too(client):
     body = client.get(f"/api/spectrum?system=li&{WARM}").json()
     assert body["thermal"] is not None
     assert all(ln["emissivity"] is not None for ln in body["lines"])
     ion = body["thermal"]["ionized_fraction"]["provenance"]
     assert any("Koopmans" in a for a in ion["assumptions"])
-
 
 def test_lithium_is_more_ionized_than_hydrogen_at_the_same_conditions(client):
     warm = "temperature_k=6000&electron_density_cm3=1e13"

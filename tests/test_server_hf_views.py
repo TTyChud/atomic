@@ -13,7 +13,6 @@ def client():
     with TestClient(create_app()) as c:
         yield c
 
-
 def _wait_done(client, job_id, deadline_s=120.0):
     t0 = time.monotonic()
     while time.monotonic() - t0 < deadline_s:
@@ -23,7 +22,6 @@ def _wait_done(client, job_id, deadline_s=120.0):
         time.sleep(0.05)
     raise TimeoutError(f"job {job_id} did not finish")
 
-
 def _run(client, path, **body):
     r = client.post(path, json=body)
     assert r.status_code == 200, r.text
@@ -32,13 +30,11 @@ def _run(client, path, **body):
     assert done["status"] == "done", done.get("error")
     return job
 
-
 def test_sample_job_defaults_to_the_screened_model(client):
     job = _run(client, "/api/jobs/sample", n=2, l=1, m=0, count=2_000, system="ne")
     meta = client.get(f"/api/jobs/{job}/meta").json()
     assert meta["model"] == "screened"
     assert "screened" in meta["provenance"]["method"]
-
 
 def test_sample_job_under_hartree_fock(client):
     job = _run(
@@ -49,7 +45,6 @@ def test_sample_job_under_hartree_fock(client):
     assert meta["model"] == "hf"
     assert "Hartree-Fock" in meta["provenance"]["method"]
     assert meta["provenance"]["fidelity"] == "approximation"
-
 
 def test_plane_job_under_hartree_fock_differs_from_the_screened_one(client):
     values = {}
@@ -62,7 +57,6 @@ def test_plane_job_under_hartree_fock_differs_from_the_screened_one(client):
         values[model] = np.frombuffer(r.content, dtype=np.float32)
     assert not np.allclose(values["gsz"], values["hf"])
 
-
 def test_iso_job_carries_the_counterfactual_badge(client):
     job = _run(
         client, "/api/jobs/isosurface",
@@ -73,7 +67,6 @@ def test_iso_job_carries_the_counterfactual_badge(client):
     assert meta["provenance"]["fidelity"] == "counterfactual"
     joined = " ".join(meta["provenance"]["assumptions"])
     assert "distinguishable" in joined
-
 
 def test_explicit_config_reaches_the_picture(client):
     values = {}
@@ -86,7 +79,6 @@ def test_explicit_config_reaches_the_picture(client):
         values[str(config)] = np.frombuffer(r.content, dtype=np.float32)
     assert not np.allclose(values["None"], values["1s2 2s2 2p5 3s1"])
 
-
 def test_refuses_an_unoccupied_subshell_with_the_reason(client):
     r = client.post(
         "/api/jobs/sample",
@@ -96,7 +88,6 @@ def test_refuses_an_unoccupied_subshell_with_the_reason(client):
     detail = r.json()["detail"]
     assert "not occupied" in detail
     assert "Fock operator" in detail
-
 
 def test_refuses_a_non_1s_orbital_with_the_cap_lifted(client):
     r = client.post(
@@ -109,7 +100,6 @@ def test_refuses_a_non_1s_orbital_with_the_cap_lifted(client):
     assert r.status_code == 422
     assert "occupancy cap" in r.json()["detail"]
 
-
 def test_refuses_pauli_off_with_exchange_on(client):
     r = client.post(
         "/api/jobs/sample",
@@ -118,14 +108,12 @@ def test_refuses_pauli_off_with_exchange_on(client):
     assert r.status_code == 422
     assert "antisymmetry" in str(r.json()["detail"])
 
-
 def test_refuses_a_one_electron_system(client):
     r = client.post(
         "/api/jobs/plane", json=dict(n=1, l=0, m=0, system="h", model="hf")
     )
     assert r.status_code == 422
     assert "electron count" in r.json()["detail"]
-
 
 def test_counterfactual_flags_are_ignored_under_the_screened_model(client):
     job = _run(
@@ -136,7 +124,6 @@ def test_counterfactual_flags_are_ignored_under_the_screened_model(client):
     assert meta["model"] == "screened"
     assert meta["provenance"]["fidelity"] == "approximation"
 
-
 def test_radial_under_hartree_fock(client):
     r = client.get("/api/radial/2/1?system=ne&model=hf")
     assert r.status_code == 200
@@ -145,7 +132,6 @@ def test_radial_under_hartree_fock(client):
     assert "not an observable" in joined
     assert body["r_wavefunction"]["provenance"]["fidelity"] == "approximation"
 
-
 def test_radial_hartree_fock_differs_from_screened(client):
     hf = client.get("/api/radial/2/1?system=ne&model=hf").json()
     gsz = client.get("/api/radial/2/1?system=ne").json()
@@ -153,12 +139,10 @@ def test_radial_hartree_fock_differs_from_screened(client):
         hf["r_wavefunction"]["values"], gsz["r_wavefunction"]["values"]
     )
 
-
 def test_radial_refuses_an_unoccupied_subshell(client):
     r = client.get("/api/radial/3/2?system=ne&model=hf")
     assert r.status_code == 422
     assert "not occupied" in r.json()["detail"]
-
 
 def test_radial_carries_the_total_density_under_hartree_fock(client):
     body = client.get("/api/radial/2/1?system=ne&model=hf").json()
@@ -168,17 +152,14 @@ def test_radial_carries_the_total_density_under_hartree_fock(client):
     assert "observable" in " ".join(d["provenance"]["assumptions"])
     assert np.trapezoid(d["values"], d["grid"]) == pytest.approx(10.0, rel=1e-3)
 
-
 def test_the_screened_model_fills_the_total_density_too_now(client):
     gsz = client.get("/api/radial/2/1?system=ne").json()["total_density"]
     hf = client.get("/api/radial/2/1?system=ne&model=hf").json()["total_density"]
     assert "u_a" in gsz["label"] and "P_a" in hf["label"]
     assert np.trapezoid(gsz["values"], gsz["grid"]) == pytest.approx(10.0, abs=5e-3)
 
-
 def test_a_one_electron_system_still_has_none(client):
     assert client.get("/api/radial/2/1?system=h").json()["total_density"] is None
-
 
 def test_radial_counterfactual_flips_the_tier(client):
     r = client.get("/api/radial/2/1?system=ne&model=hf&exchange=false")

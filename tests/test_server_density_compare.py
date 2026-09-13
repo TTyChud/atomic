@@ -9,12 +9,10 @@ from atomic.server.app import create_app
 def client():
     return TestClient(create_app())
 
-
 def test_compare_is_off_by_default(client):
     r = client.get("/api/radial/2/1?system=ne")
     assert r.status_code == 200
     assert r.json()["density_comparison"] is None
-
 
 def test_compare_returns_both_curves_on_one_grid(client):
     r = client.get("/api/radial/2/1?system=ne&compare=true")
@@ -25,7 +23,6 @@ def test_compare_returns_both_curves_on_one_grid(client):
     assert c["displaced_charge"]["unit"] == "electrons"
     assert c["displaced_charge"]["provenance"]["error_estimate"] > 0
 
-
 def test_the_shell_table_names_the_model_that_resolves_no_peak(client):
     r = client.get("/api/radial/3/0?system=na&compare=true")
     assert r.status_code == 200
@@ -34,7 +31,6 @@ def test_the_shell_table_names_the_model_that_resolves_no_peak(client):
     assert shells[2]["gsz_radius"] is None
     assert shells[2]["hf_radius"] is not None
 
-
 def test_compare_works_from_either_model(client):
     gsz = client.get("/api/radial/2/1?system=ne&compare=true").json()
     hf = client.get("/api/radial/2/1?system=ne&model=hf&compare=true").json()
@@ -42,14 +38,10 @@ def test_compare_works_from_either_model(client):
         hf["density_comparison"]["displaced_charge"]["value"]
     )
 
-
 def test_compare_does_not_need_the_drawn_orbital_to_be_occupied(client):
     r = client.get("/api/radial/3/2?system=ne&compare=true")
     assert r.status_code == 200
     assert r.json()["density_comparison"] is not None
-
-
-
 
 def test_sulfur_is_refused_by_name(client):
     r = client.get("/api/radial/3/1?system=s&model=hf&compare=true")
@@ -57,12 +49,10 @@ def test_sulfur_is_refused_by_name(client):
     detail = r.json()["detail"].lower()
     assert "green" in detail
 
-
 def test_a_one_electron_system_is_refused(client):
     r = client.get("/api/radial/2/1?system=h&compare=true")
     assert r.status_code == 422
     assert "one-electron" in r.json()["detail"]
-
 
 def test_a_thrown_switch_reaches_the_comparison_badge(client):
     r = client.get("/api/radial/1/0?system=ne&model=hf&exchange=false&compare=true")

@@ -9,12 +9,10 @@ from atomic.server.app import create_app
 def client():
     return TestClient(create_app())
 
-
 def _cog(client, **params):
     r = client.get("/api/curve-of-growth", params=params)
     assert r.status_code == 200, r.text
     return r.json()
-
 
 def test_returns_all_three_branches(client):
     body = _cog(client, lambda_nm=656.28)
@@ -24,18 +22,15 @@ def test_returns_all_three_branches(client):
     assert len(body["slope"]) == n
     assert len(body["tau_centre"]) == n
 
-
 def test_picks_the_line_nearest_the_requested_wavelength(client):
     assert _cog(client, lambda_nm=656.0)["label"].startswith("3->2")
     assert _cog(client, lambda_nm=486.0)["label"].startswith("4->2")
     assert _cog(client, lambda_nm=121.5)["label"].startswith("2->1")
 
-
 def test_the_strongest_transition_at_a_wavelength_is_the_one_drawn(client):
     body = _cog(client, lambda_nm=656.28)
     assert body["label"] == "3->2 (3d->2p)"
     assert body["oscillator_strength"] == pytest.approx(0.6961, abs=1e-3)
-
 
 def test_the_branches_have_their_textbook_slopes(client):
     body = _cog(client, lambda_nm=656.28)
@@ -47,11 +42,9 @@ def test_the_branches_have_their_textbook_slopes(client):
     assert all(abs(s - 1.0) < 0.05 for s in linear)
     assert all(abs(s - 0.5) < 0.05 for s in damping)
 
-
 def test_equivalent_width_rises_with_column(client):
     w = _cog(client, lambda_nm=656.28)["equivalent_width_nm"]
     assert all(b > a for a, b in zip(w, w[1:], strict=False))
-
 
 def test_saturation_is_visible_in_the_numbers(client):
     body = _cog(client, lambda_nm=656.28)
@@ -68,7 +61,6 @@ def test_saturation_is_visible_in_the_numbers(client):
     assert column_ratio > 100
     assert width_ratio < 5
 
-
 def test_a_hotter_gas_moves_the_knee(client):
     def knee(t):
         b = _cog(client, lambda_nm=656.28, temperature_k=t)
@@ -79,7 +71,6 @@ def test_a_hotter_gas_moves_the_knee(client):
 
     assert knee(40000) > 1.5 * knee(2500)
 
-
 def test_carries_the_widths_it_was_computed_from(client):
     body = _cog(client, lambda_nm=656.28, temperature_k=10000)
     assert body["sigma_nm"] > 0
@@ -87,7 +78,6 @@ def test_carries_the_widths_it_was_computed_from(client):
     assert body["damping_parameter"] == pytest.approx(
         body["gamma_nm"] / (body["sigma_nm"] * 2**0.5), rel=1e-9
     )
-
 
 def test_an_instrument_does_not_change_the_curve(client):
     plain = _cog(client, lambda_nm=656.28)
@@ -97,23 +87,19 @@ def test_an_instrument_does_not_change_the_curve(client):
     thin_b = blurred["equivalent_width_nm"][0] / blurred["column_density_m2"][0]
     assert thin_b == pytest.approx(thin_a, rel=1e-3)
 
-
 def test_states_what_it_cannot_do(client):
     text = " ".join(_cog(client, lambda_nm=656.28)["provenance"]["assumptions"])
     assert "never reverses" in text
     assert "stimulated emission" in text
-
 
 def test_screened_atom_gets_a_curve(client):
     body = _cog(client, system="na", lambda_nm=589.0)
     assert set(body["regime"]) >= {"linear", "saturated"}
     assert body["oscillator_strength"] > 0
 
-
 def test_rejects_a_nonsense_wavelength(client):
     r = client.get("/api/curve-of-growth", params={"lambda_nm": 0})
     assert r.status_code == 422
-
 
 def test_rejects_an_out_of_range_resolving_power(client):
     r = client.get(

@@ -13,7 +13,6 @@ def client():
     with TestClient(create_app()) as c:
         yield c
 
-
 def _wait_done(client, job_id, deadline_s=60.0):
     t0 = time.monotonic()
     while time.monotonic() - t0 < deadline_s:
@@ -23,7 +22,6 @@ def _wait_done(client, job_id, deadline_s=60.0):
         time.sleep(0.05)
     raise TimeoutError(f"job {job_id} did not finish")
 
-
 def _run(client, **body):
     r = client.post("/api/jobs/isosurface", json=body)
     assert r.status_code == 200, r.text
@@ -32,11 +30,9 @@ def _run(client, **body):
     assert status["status"] == "done", status["error"]
     return job_id, client.get(f"/api/jobs/{job_id}/meta").json()
 
-
 def _channel(client, job_id, name, dtype):
     raw = client.get(f"/api/jobs/{job_id}/data?channel={name}").content
     return np.frombuffer(raw, dtype=dtype)
-
 
 def test_isosurface_job_end_to_end(client):
     job_id, meta = _run(client, n=1, l=0, m=0, fraction=0.9, resolution=64)
@@ -65,7 +61,6 @@ def test_isosurface_job_end_to_end(client):
     assert radii.mean() == pytest.approx(2.6612, rel=5e-3)
     assert np.allclose(phase, 0.0)
 
-
 def test_the_default_channel_is_the_vertices(client):
     job_id, meta = _run(client, n=1, l=0, m=0, fraction=0.5, resolution=48)
     default = client.get(f"/api/jobs/{job_id}/data").content
@@ -73,13 +68,11 @@ def test_the_default_channel_is_the_vertices(client):
     assert default == named
     assert len(default) == meta["vertex_count"] * 3 * 4
 
-
 def test_an_unknown_channel_names_the_ones_that_exist(client):
     job_id, _ = _run(client, n=1, l=0, m=0, resolution=48)
     r = client.get(f"/api/jobs/{job_id}/data?channel=normals")
     assert r.status_code == 422
     assert "vertices, triangles, phase" in r.json()["detail"]
-
 
 def test_the_provenance_and_its_disclosures_survive_the_trip(client):
     _, meta = _run(client, n=2, l=1, m=0, fraction=0.9, resolution=48, basis="real")
@@ -95,13 +88,11 @@ def test_the_provenance_and_its_disclosures_survive_the_trip(client):
     assert meta["mesh_volume"]["unit"] == "bohr^3"
     assert meta["area"]["unit"] == "bohr^2"
 
-
 def test_a_screened_atom_arrives_as_an_approximation(client):
     _, meta = _run(client, n=3, l=0, m=0, fraction=0.9, resolution=48, system="na")
     assert meta["provenance"]["fidelity"] == "approximation"
     assert meta["system"] == "na"
     assert meta["enclosed_fraction"]["value"] == pytest.approx(0.9, abs=0.01)
-
 
 def test_the_reduced_mass_of_the_system_reaches_the_surface(client):
     job_id, _ = _run(client, n=1, l=0, m=0, fraction=0.9, resolution=48, system="mu-h")
@@ -109,7 +100,6 @@ def test_the_reduced_mass_of_the_system_reaches_the_surface(client):
         _channel(client, job_id, "vertices", np.float32).reshape(-1, 3), axis=1
     ).mean()
     assert muonic == pytest.approx(2.6612 / 186.0, rel=0.05)
-
 
 @pytest.mark.parametrize(
     "body",
@@ -124,7 +114,6 @@ def test_the_reduced_mass_of_the_system_reaches_the_surface(client):
 )
 def test_requests_that_do_not_name_a_surface_are_refused(client, body):
     assert client.post("/api/jobs/isosurface", json=body).status_code == 422
-
 
 def test_a_tighter_fraction_returns_a_smaller_surface(client):
     _, tight = _run(client, n=1, l=0, m=0, fraction=0.5, resolution=48)
