@@ -1,4 +1,4 @@
-.PHONY: help setup serve stop web-build web-dev test test-py test-web lint build smoke deploy engine-stage clean
+.PHONY: help setup serve stop web-build web-dev test test-py test-web lint build engine-stage clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -34,12 +34,6 @@ lint: ## Ruff only
 	.venv/bin/ruff check .
 
 build: test-py test-web web-build ## Full gate: backend tests, web tests, web build
-
-smoke: ## Build the CI container image and run the smoke test
-	bash scripts/smoke_container.sh atomic:ci
-
-deploy: build ## Run the full gate, then deploy to Fly
-	flyctl deploy --ha=false
 
 clean: ## Remove venv, web build, caches
 	rm -rf .venv web/dist
