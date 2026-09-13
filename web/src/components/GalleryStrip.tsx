@@ -1,16 +1,36 @@
+import { useEffect, useState } from "react";
 import { thumbnailUrl } from "../api/client";
 import type { Basis } from "../api/client";
 import { galleryStates } from "../lib/gallery";
 import { subshellAvailable } from "../lib/hfModel";
 import { THUMBNAIL_LIBERTY } from "../lib/liberties";
 import { stateLabel } from "../lib/quantum";
-import { isHydrogenic } from "../lib/systemKind";
+import { systemKind } from "../lib/systemKind";
 import { useAppStore } from "../state/store";
 import { Badge } from "./Badge";
 
+function Thumb({ src, label }: { src: string; label: string }) {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [src]);
+  if (broken) return <span className="thumb-blank" aria-hidden="true" />;
+  return (
+    <img
+      src={src}
+      alt={label}
+      width={56}
+      height={56}
+      loading="lazy"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
 export function GalleryStrip() {
-  const { n, l, m, system, systems, basis, setQuantumNumbers, hfLevels, model } = useAppStore();
-  const hasThumbnails = isHydrogenic(systems, system);
+  const {
+    n, l, m, system, systems, basis, model, config, exchange, pauli,
+    setQuantumNumbers, hfLevels,
+  } = useAppStore();
+  const hasThumbnails = systemKind(systems, system) !== null;
   return (
     <div className="gallery">
       <div className="gallery-head">
@@ -35,13 +55,12 @@ export function GalleryStrip() {
               }
               onClick={() => setQuantumNumbers(s.n, s.l, s.m)}
             >
-              {hasThumbnails ? (
-                <img
-                  src={thumbnailUrl(s.n, s.l, s.m, system, basis as Basis, 96)}
-                  alt={stateLabel(s.n, s.l, s.m)}
-                  width={72}
-                  height={72}
-                  loading="lazy"
+              {hasThumbnails && reachable ? (
+                <Thumb
+                  src={thumbnailUrl(s.n, s.l, s.m, system, basis as Basis, 96, {
+                    model, config, exchange, pauli,
+                  })}
+                  label={stateLabel(s.n, s.l, s.m)}
                 />
               ) : (
                 <span className="thumb-blank" aria-hidden="true" />

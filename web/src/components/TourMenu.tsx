@@ -32,8 +32,6 @@ export function TourMenu() {
                 <span className="tour-menu-blurb">{t.blurb}</span>
                 <span className="tour-menu-count">
                   {t.steps.length} steps
-                  {
-}
                   {completedTours.includes(t.id) && <span className="tour-menu-done">done</span>}
                 </span>
               </button>
