@@ -1,12 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Thumbnail delivery: on a deployed UI the engine answers over the network
- * and an <img src> URL is exactly right; on the device engine the bytes must
- * come through the transport and become object URLs — cached per URL so a
- * re-rendering gallery does not refetch.
- */
-
 const engineModeValue = { current: "remote" as "local" | "remote" };
 const fetchThumbnailMock = vi.fn();
 
@@ -85,7 +78,6 @@ describe("thumbnailSrc", () => {
     expect(a).toBe(b);
     expect(fetchThumbnailMock).toHaveBeenCalledTimes(1);
 
-    // A different orbital is a different URL: it fetches.
     await thumbnailSrc(3, 1, 0, "c", "real", 96);
     expect(fetchThumbnailMock).toHaveBeenCalledTimes(2);
   });

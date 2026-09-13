@@ -50,7 +50,6 @@ const ENGINE_LABEL: Record<EngineBoot["state"], string> = {
   error: "device engine · error",
 };
 
-/** Says where the physics is running — the honesty principle, applied to the runtime. */
 function EngineBadge() {
   const [boot, setBoot] = useState<EngineBoot>(engine.current);
   useEffect(() => engine.onChange(setBoot), []);

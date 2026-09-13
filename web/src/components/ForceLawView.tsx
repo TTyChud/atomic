@@ -23,9 +23,7 @@ export function ForceLawView() {
   const oneElectron = systems.find((s) => s.key === system)?.kind === "hydrogenic";
   const systemsLoaded = systems.length > 0;
   useEffect(() => {
-    // The force-law lab solves one-electron systems only; a multi-electron
-    // selection here would be refused, so the view pins itself to hydrogen
-    // until the picker is used.
+
     if (!systemsLoaded || !oneElectron) return;
     if (forceLaw === null && forceStatus === "idle") void loadForceLaw();
   }, [forceLaw, forceStatus, system, systemsLoaded, oneElectron, loadForceLaw]);

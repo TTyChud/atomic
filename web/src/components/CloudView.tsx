@@ -46,12 +46,6 @@ function CameraRig({ distance }: { distance: number }) {
   return null;
 }
 
-/**
- * Re-aims the camera and the orbit target at the nucleus after the user has
- * panned or zoomed away. The atom always lives at the origin, so "center the
- * atom" means restoring the framing the view opens with: the same offset
- * direction, the orbital's own distance, and a clean look-at.
- */
 function Recenter({
   distance,
   controlsRef,
@@ -88,14 +82,6 @@ const WEBGL = (() => {
   }
 })();
 
-/**
- * Watches the WebGL context and reports loss/restoration. A lost context is
- * the GPU refusing the workload (too many contexts, driver reset, memory
- * pressure) — not a bug in the scene graph. Browsers restore automatically
- * unless the loss is permanent (too many contexts is the usual cause), so
- * the view surfaces what happened instead of silently freezing on the last
- * frame.
- */
 function ContextGuard({ onLost }: { onLost: (permanent: boolean) => void }) {
   const gl = useThree((s) => s.gl);
   useEffect(() => {

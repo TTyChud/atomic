@@ -20,7 +20,6 @@ def client():
     with TestClient(create_app()) as c:
         yield c
 
-
 def _wait_done(client, job_id, deadline_s=120.0):
     t0 = time.monotonic()
     while time.monotonic() - t0 < deadline_s:
@@ -30,9 +29,6 @@ def _wait_done(client, job_id, deadline_s=120.0):
         time.sleep(0.05)
     raise TimeoutError(f"job {job_id} did not finish")
 
-
-
-
 def test_sulfur_and_chlorine_are_atoms_the_app_knows():
     for key in ("s", "cl"):
         assert is_atom_key(key)
@@ -40,21 +36,16 @@ def test_sulfur_and_chlorine_are_atoms_the_app_knows():
     assert atom_for_key("s").z == 16
     assert atom_for_key("cl").z == 17
 
-
 def test_they_are_not_atoms_the_screened_model_can_speak_for():
     assert set(ATOM_KEYS) - set(GSZ_ATOM_KEYS) == {"s", "cl"}
     assert not has_gsz_parameters(16)
     assert not has_gsz_parameters(17)
     assert has_gsz_parameters(18)
 
-
 def test_the_gsz_list_did_not_otherwise_change():
     assert GSZ_ATOM_KEYS[0] == "he" and GSZ_ATOM_KEYS[-1] == "ar"
     assert len(GSZ_ATOM_KEYS) == 15
     assert len(ATOM_KEYS) == 17
-
-
-
 
 @pytest.mark.parametrize(
     "path",
@@ -71,7 +62,6 @@ def test_screened_endpoints_refuse_sulfur_with_the_citation(client, path):
     assert "Szydlik" in detail
     assert "Hartree-Fock" in detail
 
-
 def test_screened_jobs_refuse_sulfur_too(client):
     r = client.post(
         "/api/jobs/sample", json=dict(n=3, l=1, m=0, count=2_000, system="s")
@@ -79,15 +69,11 @@ def test_screened_jobs_refuse_sulfur_too(client):
     assert r.status_code == 400
     assert "Szydlik" in r.json()["detail"]
 
-
-
-
 def test_sulfur_radial_under_hartree_fock(client):
     body = client.get("/api/radial/3/1?system=s&model=hf").json()
     assert body["r_wavefunction"]["provenance"]["fidelity"] == "approximation"
     d = body["total_density"]
     assert np.trapezoid(d["values"], d["grid"]) == pytest.approx(16.0, rel=1e-3)
-
 
 def test_chlorine_cloud_under_hartree_fock(client):
     r = client.post(
@@ -100,7 +86,6 @@ def test_chlorine_cloud_under_hartree_fock(client):
     meta = client.get(f"/api/jobs/{r.json()['id']}/meta").json()
     assert meta["model"] == "hf"
     assert meta["provenance"]["fidelity"] == "approximation"
-
 
 def test_the_systems_list_offers_them_and_says_what_can_draw_them(client):
     systems = {s["key"]: s for s in client.get("/api/systems").json()["systems"]}

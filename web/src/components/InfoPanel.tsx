@@ -10,9 +10,7 @@ export function InfoPanel() {
   const screened = sys?.kind === "screened";
 
   useEffect(() => {
-    // Wait for the systems table: before it arrives we cannot tell a
-    // one-electron system from a screened atom, and guessing sends the
-    // hydrogenic state endpoint a system it must refuse.
+
     if (systems.length > 0 && !screened) void loadStateInfo();
   }, [n, l, m, system, systems.length, screened, loadStateInfo]);
 

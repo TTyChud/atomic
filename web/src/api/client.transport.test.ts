@@ -1,15 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Tests for the single transport every engine call goes through.
- *
- * `client.ts` routes relative URLs to the in-browser engine on localhost
- * (honoring the ?engine= override) and to plain fetch everywhere else.
- * The routing decision runs at call time against `globalThis.location`, so
- * these tests stub the location and the engine bridge, then re-import the
- * module fresh.
- */
-
 const engineRequest = vi.fn();
 
 vi.mock("../engine/engine", () => ({
@@ -133,7 +123,7 @@ describe("transport routing", () => {
     const { getSystems } = await loadClient();
     const { currentEngineMode } = await import("../engine/engine");
     (currentEngineMode as ReturnType<typeof vi.fn>).mockReturnValue("local");
-    // Engine request fails and the bridge never reached "ready".
+
     engineRequest.mockRejectedValue(new Error("pyodide blocked"));
 
     const res = await getSystems();
@@ -153,7 +143,7 @@ describe("transport routing", () => {
     engineRequest.mockRejectedValue(new Error("no staged runtime"));
 
     await expect(getJobMeta("x")).rejects.toThrow("no staged runtime");
-    // A fetch here would return the SPA's index.html for a JSON endpoint.
+
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

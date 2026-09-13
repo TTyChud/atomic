@@ -161,8 +161,6 @@ export function wavelengthWindow(lines: SpectralLineInfo[], full: boolean) {
   };
 }
 
-
-
 export function residualUnit(tol: number): { scale: number; label: string } {
   if (tol < 1e-3) return { scale: 1e6, label: "parts per million" };
   return { scale: 100, label: "percent" };
@@ -666,7 +664,7 @@ export function SpectrumView() {
             intensities && !isThermal
               ? "The bars now show the Einstein A coefficient: how fast an atom in the upper level falls, not how many atoms are up there."
               : "This uses the spontaneous emission rate, which says which transitions an atom prefers before any gas is involved."
-          } 
+          }
         />
         {intensities && (
           <Toggle

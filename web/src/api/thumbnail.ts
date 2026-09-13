@@ -1,12 +1,4 @@
-/**
- * Thumbnails through the standard transport.
- *
- * `thumbnailUrl()` produces a URL for `<img src>`; over the network that is
- * exactly right. In device mode the engine lives in a Worker, which `<img>`
- * cannot reach — so the gallery fetches the bytes through the same
- * `request()` transport and renders object URLs instead. Results are cached
- * per URL for the page's lifetime.
- */
+
 
 import { currentEngineMode } from "../engine/engine";
 import { fetchThumbnail, thumbnailUrl } from "./client";

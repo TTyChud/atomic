@@ -58,7 +58,6 @@ class TestResolverKinds:
         with pytest.raises(KeyError):
             resolve_claim({"of": "wavelength_nm", "system": "h", "n_upper": 3})
 
-
 class TestTourContent:
     def test_tours_load(self):
         tours = load_tours()

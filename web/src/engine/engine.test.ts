@@ -8,8 +8,7 @@ describe("engineMode", () => {
   });
 
   it("runs on-device on a hosted static UI with no API base", () => {
-    // The staged runtime ships with the UI, so a static host runs the
-    // physics in the visitor's browser — no backend involved.
+
     expect(engineMode("atomic.vercel.app", "")).toBe("local");
   });
 
@@ -21,7 +20,6 @@ describe("engineMode", () => {
   });
 });
 
-/** Minimal Worker double: records posts, lets tests emit worker messages. */
 class FakeWorker {
   onmessage: ((ev: { data: unknown }) => void) | null = null;
   onerror: (() => void) | null = null;
@@ -111,7 +109,7 @@ describe("EngineBridge", () => {
     const posted = worker.sent.at(-1) as { id: number };
     worker.emit({ type: "error", id: posted.id, error: "boom" });
     await expect(pending).rejects.toThrow("boom");
-    // The failure is request-scoped: the engine itself stays ready.
+
     expect(bridge.ready).toBe(true);
   });
 
@@ -124,7 +122,6 @@ describe("EngineBridge", () => {
     await expect(started).rejects.toThrow("pyodide exploded");
     expect(bridge.current).toEqual({ state: "error", error: "pyodide exploded" });
 
-    // The failed boot is forgotten, so a retry re-posts the boot message.
     const retried = bridge.start();
     worker.emit({ type: "ready", version: "0.1.0" });
     await expect(retried).resolves.toBeUndefined();
@@ -145,5 +142,4 @@ describe("EngineBridge", () => {
   });
 });
 
-/** Flush the microtask chain so an awaited `bridge.request` posts its message. */
 const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));

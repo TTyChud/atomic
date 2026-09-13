@@ -25,7 +25,6 @@ function Thumb({ src, label }: { src: string; label: string }) {
   );
 }
 
-/** Resolves the thumbnail through the standard transport (blob in device mode). */
 function GalleryThumb(props: {
   n: number;
   l: number;

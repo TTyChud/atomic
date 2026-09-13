@@ -1,7 +1,6 @@
 import { Html, Line } from "@react-three/drei";
 import { PHYSICS_TO_SCREEN } from "../lib/frame";
 
-
 const AXES: { key: "x" | "y" | "z"; dir: [number, number, number]; color: string }[] = [
   { key: "x", dir: [1, 0, 0], color: "#ff7a6b" },
   { key: "y", dir: [0, 1, 0], color: "#6cd98a" },

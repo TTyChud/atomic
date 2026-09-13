@@ -33,25 +33,14 @@ export function key(v: string): string {
   return encodeURIComponent(v);
 }
 
-/**
- * Transport for every engine call.
- *
- * Same-origin localhost (dev, `atomic serve`, `vite preview`) routes to the
- * in-browser engine — the real Python package running in a Web Worker, no
- * server involved. Any other origin (a deployed UI) uses plain fetch against
- * the network API. Absolute URLs (split deploy) always go over the network.
- */
 async function request(url: string, init?: RequestInit): Promise<Response> {
   if (isLocalRelative(url)) {
     try {
       return await engine.request(url, init);
     } catch (e) {
-      // The engine answered (a real 404/409/etc.): surface it honestly.
+
       if (engine.ready) throw e;
-      // The engine never booted (no staged runtime, blocked worker). A
-      // same-origin `atomic serve` can still answer — but only on hosts
-      // where one may exist; elsewhere the fetch would just hit the SPA
-      // rewrite and return HTML for a JSON endpoint.
+
       const hostname = globalThis.location?.hostname ?? "";
       if (!hasLocalServer(hostname)) throw e;
     }
@@ -61,13 +50,10 @@ async function request(url: string, init?: RequestInit): Promise<Response> {
 
 function isLocalRelative(url: string): boolean {
   if (/^https?:\/\//i.test(url)) return false;
-  // No location at all: not a browser (node test runner, SSR). The device
-  // engine cannot exist there — default to the network path.
+
   const hostname = globalThis.location?.hostname;
   if (hostname === undefined) return false;
-  // currentEngineMode honors the ?engine=server|device override on top of the
-  // origin policy, so the override switches the whole transport, not just the
-  // badge. Absolute URLs always go over the network regardless.
+
   return currentEngineMode() === "local";
 }
 
@@ -88,11 +74,6 @@ async function errorFrom(url: string, res: Response): Promise<Error> {
   return new Error(detail ?? `${url}: HTTP ${res.status}`);
 }
 
-/**
- * Fetch a binary payload through the standard transport and decode it.
- * One status-check-and-decode path for every octet-stream endpoint
- * (job channels, thumbnails), device engine and network alike.
- */
 async function binary<T>(
   path: string,
   decode: (buffer: ArrayBuffer) => T,
@@ -403,7 +384,6 @@ export async function getChannel(jobId: string, channel?: string): Promise<Float
   return binary<Float32Array>(path, decodeFloats);
 }
 
-/** Fetch a thumbnail's bytes through the standard transport. */
 export function fetchThumbnail(url: string): Promise<Blob> {
   return binary<Blob>(url, (buffer) => new Blob([buffer]));
 }

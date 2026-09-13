@@ -5,8 +5,7 @@ let lastUrl = "";
 
 function stubFetch() {
   lastUrl = "";
-  // Pin the network path (?engine=server) — this suite is about URL shapes,
-  // not transport selection.
+
   vi.stubGlobal(
     "location",
     new URL("https://atomic.test/?engine=server") as unknown as Location,

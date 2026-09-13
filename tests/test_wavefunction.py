@@ -29,7 +29,6 @@ def _spherical_grid(n, r_points=800, ang_points=48):
     )
     return pos, wgt.ravel()
 
-
 @pytest.mark.parametrize(
     "n,l,m,basis", [(1, 0, 0, "complex"), (2, 1, 1, "complex"), (3, 2, -2, "real")]
 )
@@ -39,7 +38,6 @@ def test_norm_is_one(n, l, m, basis):
     norm = float(np.sum(np.abs(psi) ** 2 * wgt))
     assert norm == pytest.approx(1.0, abs=2e-3)
 
-
 def test_complex_phase_is_exp_i_m_phi():
     phis = np.linspace(0.0, 2.0 * np.pi, 9, endpoint=False)
     pos = np.stack([2.0 * np.cos(phis), 2.0 * np.sin(phis), np.full_like(phis, 1.3)], axis=1)
@@ -47,12 +45,10 @@ def test_complex_phase_is_exp_i_m_phi():
     unwound = np.unwrap(np.angle(psi))
     assert np.diff(unwound) == pytest.approx(2.0 * np.diff(phis))
 
-
 def test_real_basis_returns_real_dtype():
     pos = np.array([[1.0, 0.5, -0.3], [0.2, -1.0, 2.0]])
     wf = evaluate_state(2, 1, 1, pos, basis="real")
     assert wf.values.dtype == np.float64
-
 
 def test_origin_is_finite():
     pos = np.zeros((1, 3))
@@ -61,14 +57,12 @@ def test_origin_is_finite():
     assert np.isfinite(psi_s).all() and psi_s[0] != 0.0
     assert psi_p[0] == pytest.approx(0.0)
 
-
 def test_container_and_provenance():
     pos = np.array([[1.0, 0.0, 0.0]])
     wf = evaluate_state(2, 1, 0, pos, Z=2, mu_ratio=0.5, basis="real")
     assert isinstance(wf, WavefunctionValues)
     assert wf.provenance.fidelity is Fidelity.EXACT
     assert (wf.n, wf.l, wf.m, wf.Z, wf.mu_ratio, wf.basis) == (2, 1, 0, 2, 0.5, "real")
-
 
 def test_rejects_bad_input():
     with pytest.raises(ValueError):
