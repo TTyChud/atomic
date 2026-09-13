@@ -77,8 +77,6 @@ function MobileShell({ height }: { height: number }) {
         <Stage />
         <GalleryStrip />
       </main>
-      {
-}
       <TourPanel />
       <MobileSheet viewportHeight={height} />
       <TourSpotlight />

@@ -4,6 +4,7 @@ import App from "./App";
 import { COUNT_CHOICES } from "./components/Controls";
 import { currentUrlState, isNewPlace, parseAppUrl, serializeAppUrl } from "./lib/urlState";
 import { isNarrow } from "./lib/viewport";
+import { isScreened } from "./lib/systemKind";
 import { useAppStore } from "./state/store";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
@@ -24,7 +25,10 @@ if (opening.tour) {
 
 {
   const settled = useAppStore.getState();
-  void settled.loadSystems().then(() => void settled.loadStateInfo());
+  void settled.loadSystems().then(() => {
+    const s = useAppStore.getState();
+    if (!isScreened(s.systems, s.system)) void s.loadStateInfo();
+  });
   if (settled.view === "cloud") void settled.sample();
   else if (settled.view === "plane") void settled.loadPlane();
   else if (settled.view === "radial") void settled.loadRadial();

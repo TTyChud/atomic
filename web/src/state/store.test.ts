@@ -377,6 +377,13 @@ describe("the Back button's landing pad", () => {
   });
 });
 
+describe("the default place", () => {
+  it("opens on carbon", () => {
+    expect(useAppStore.getInitialState().system).toBe("c");
+    expect(useAppStore.getInitialState().n).toBe(6);
+  });
+});
+
 describe("the counterfactual switches", () => {
   it("default to real physics, so no session lands in the counterfactual", () => {
     expect(useAppStore.getInitialState().exchange).toBe(true);

@@ -255,10 +255,10 @@ function message(e: unknown): string {
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
-  n: 1,
+  n: 6,
   l: 0,
   m: 0,
-  system: "h",
+  system: "c",
   basis: "complex",
   view: "cloud",
   colorMode: "solid",
