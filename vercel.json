@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
   "installCommand": "cd web && npm ci --no-audit --no-fund",
   "buildCommand": "python3 -m pip install --quiet build || python3 -m pip install --quiet --break-system-packages build; python3 scripts/stage_engine_wheel.py && cd web && npm run build",
   "outputDirectory": "web/dist",
