@@ -1,23 +1,4 @@
 
-/**
- * The atomic engine, running in the browser.
- *
- * Boots Pyodide (staged under /atomic-engine/pyodide/ by
- * scripts/stage_engine_wheel.py), installs the package's own wheel, imports
- * the real `create_app` and answers requests by dispatching ASGI at it. No
- * physics is re-implemented and no numbers are precomputed: this is the same
- * `atomic` package the deployed server runs, verified by the same evidence
- * suite — executed on the visitor's device.
- *
- * Protocol (postMessage in → out):
- *   {type:"boot"}                            → "boot-phase", then "ready"
- *   {type:"request", id, method, url, body?} → {type:"result", id, result}
- *   any failure                              → {type:"error", id?, error}
- *
- * Every response crosses as {status, content_type, body_b64} so true status
- * codes (404, 409, 422) survive the boundary — see engineCodec.
- */
-
 import { bytesToBase64 } from "./engineCodec";
 
 interface Pyodide {
@@ -40,9 +21,9 @@ const STAGED_ROOT = new URL("/atomic-engine/", import.meta.url).href;
 const BOOT_PY = `
 from atomic.server.app import create_app
 from atomic.server.engine_shim import InlineExecutor, install_inline_threadpool, dispatch
-install_inline_threadpool()  # WASM: FastAPI's sync endpoints must not spawn threads
+install_inline_threadpool()
 _app = create_app()
-_app.state.executor = InlineExecutor()  # jobs finish inside their create call
+_app.state.executor = InlineExecutor()
 `;
 
 let booting: Promise<void> | null = null;

@@ -122,13 +122,6 @@ from atomic.transfer import absorb, curve_of_growth, default_columns
 _DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 def _allowed_origins() -> list[str]:
-    """CORS allow-list: dev origins plus anything configured for split deploys.
-
-    A static UI hosted away from the engine (e.g. Vercel in front of a Fly
-    API) sets ATOMIC_ALLOWED_ORIGINS on the engine, comma-separated. Origins
-    must be scheme+host, no trailing slash. CORS only matters for browsers —
-    nothing else here ever trusts an Origin header.
-    """
     raw = os.environ.get("ATOMIC_ALLOWED_ORIGINS", "").strip()
     if not raw:
         return _DEV_ORIGINS

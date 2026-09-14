@@ -305,7 +305,6 @@ textarea {
   min-width: 0;
 }
 
-/* Disabled group-header rows inside the system picker. */
 .control-select select option:disabled {
   color: var(--label);
   font-weight: 600;

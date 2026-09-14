@@ -1,17 +1,3 @@
-"""Minimal PNG encoding for thumbnails — no plotting stack.
-
-`render_thumbnail` needs exactly one thing from the visualization world: map
-a normalized density field through the inferno palette and emit PNG bytes.
-Importing matplotlib for that pulled ~9 MB of plotting machinery (plus Pillow,
-fonttools, contourpy) into every environment that serves a thumbnail —
-including the in-browser engine's download.
-
-This module writes the PNG with the standard library and a vendored 256-entry
-inferno lookup table (extracted from matplotlib's colormap definition and
-quantized the way its PNG writer does — floor to 8 bits per channel).
-Truecolor RGB, filter 0, zlib level 9: pixels match the old output exactly.
-"""
-
 from __future__ import annotations
 
 import struct
@@ -60,7 +46,6 @@ _INFERNO: tuple[int, ...] = (
 # fmt: on
 
 def _chunk(kind: bytes, data: bytes) -> bytes:
-    """One PNG chunk: length, type, payload, CRC-32."""
     return (
         struct.pack(">I", len(data))
         + kind
@@ -69,13 +54,6 @@ def _chunk(kind: bytes, data: bytes) -> bytes:
     )
 
 def inferno_rgb(values: list[list[float]]) -> bytes:
-    """Map normalized [0, 1] values through inferno into RGB bytes.
-
-    Returns `height * width * 3` bytes in row-major order, ready for
-    `encode_png`. The LUT entry is chosen by ``floor(v * 256)`` — the exact
-    indexing matplotlib's ListedColormap uses — so pixels match the previous
-    matplotlib-rendered thumbnails bit for bit.
-    """
     rgb = bytearray()
     for row in values:
         for v in row:
@@ -85,7 +63,6 @@ def inferno_rgb(values: list[list[float]]) -> bytes:
     return bytes(rgb)
 
 def encode_png(rgb: bytes, width: int, height: int) -> bytes:
-    """Encode truecolor RGB pixel bytes (from `inferno_rgb`) as a PNG."""
     stride = width * 3
     if len(rgb) != stride * height:
         raise ValueError(

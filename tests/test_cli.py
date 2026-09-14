@@ -53,8 +53,6 @@ def test_flags_take_precedence_over_env(monkeypatch):
     assert captured == {"host": "127.0.0.1", "port": 8001}
 
 def test_remote_bind_suppresses_browser(monkeypatch):
-    """Serving on a non-loopback interface (a separate server) must not try to
-    open a desktop browser — there is no desktop."""
     opened = []
     monkeypatch.setattr(uvicorn, "run", lambda app, host, port: None)
     monkeypatch.setattr(cli, "_open_browser_soon", lambda url: opened.append(url))
@@ -74,7 +72,6 @@ def test_invalid_port_env_falls_back_to_default(monkeypatch):
     assert captured["port"] == 8000
 
 def test_platform_port_env_is_honored(monkeypatch):
-    """PaaS convention (Render, Heroku, ...): the port arrives as PORT."""
     captured = {}
     monkeypatch.setattr(
         uvicorn, "run", lambda app, host, port: captured.update(port=port)

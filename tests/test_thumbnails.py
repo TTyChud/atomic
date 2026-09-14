@@ -74,11 +74,6 @@ def test_thumbnail_rejects_an_unknown_model(client):
     assert client.get("/api/thumbnail/2/1/0?system=c&model=wat").status_code == 422
 
 def test_inferno_encoding_matches_matplotlib_pixel_for_pixel():
-    """The stdlib encoder must reproduce matplotlib's rendering exactly.
-
-    This is the evidence that dropping matplotlib from the runtime cost
-    nothing visually. matplotlib stays a dev-only dependency for this test.
-    """
     import io
 
     import numpy as np

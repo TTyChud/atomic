@@ -1,19 +1,4 @@
 #!/usr/bin/env python3
-"""Stage the in-browser engine runtime.
-
-Builds the `atomic` wheel, copies the Pyodide distribution from web/node_modules,
-and writes a manifest naming the wheel, into:
-
-    web/public/atomic-engine/
-        atomic-<version>-py3-none-any.whl
-        pyodide/            (runtime: pyodide.asm.wasm, packages, ...)
-        manifest.json
-
-`web/dist` copies public/ verbatim, so the dev server and the deployed UI
-serve /atomic-engine/... identically. The engine worker fetches the wheel
-from the manifest, installs it with micropip, and runs the real package.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -30,9 +15,6 @@ WEB = ROOT / "web"
 STAGE = WEB / "public" / "atomic-engine"
 PYODIDE_NM = WEB / "node_modules" / "pyodide"
 
-# Runtime files the browser actually requests. The npm package also ships
-# node-only entry points and maps for them; the engine worker loads the .mjs
-# directly, so only the core wasm, lock file, and stdlib are needed.
 PYODIDE_KEEP = [
     "pyodide.asm.mjs",
     "pyodide.asm.wasm",
@@ -40,12 +22,6 @@ PYODIDE_KEEP = [
     "python_stdlib.zip",
 ]
 
-# Python packages the engine imports, resolved to their full dependency
-# closure from pyodide-lock.json and downloaded next to the runtime so
-# loadPackage never touches a third-party CDN at runtime. matplotlib is
-# deliberately absent: thumbnails are encoded by the stdlib PNG writer in
-# atomic/server/png.py, which keeps ~9 MB (matplotlib + Pillow + fonttools +
-# contourpy + kiwisolver + cycler + pyparsing) out of the visitor download.
 PYODIDE_PKGS = ["numpy", "scipy", "fastapi", "micropip"]
 
 
@@ -58,7 +34,6 @@ def _pyodide_version() -> str:
 
 
 def wheel_closure(lock: dict, names: list[str]) -> list[str]:
-    """file_names for `names` and everything they depend on, per the lock."""
     packages = lock["packages"]
 
     def key_for(name: str) -> str | None:
@@ -104,7 +79,6 @@ def download_wheels(lock: dict) -> int:
 
 
 def build_wheel() -> Path:
-    """Build the wheel and copy it into the staging dir (returns the copy)."""
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(
             [sys.executable, "-m", "build", "--wheel", "--outdir", str(tmp)],

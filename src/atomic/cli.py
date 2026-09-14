@@ -25,8 +25,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 def _resolve_serve_target(args: argparse.Namespace) -> tuple[str, int]:
-    """Precedence: explicit flag > ATOMIC_HOST/ATOMIC_PORT env > PORT (PaaS
-    convention: Render, Heroku, ...) > loopback default."""
     host = args.host
     if host is None:
         host = os.environ.get("ATOMIC_HOST", DEFAULT_HOST)

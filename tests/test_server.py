@@ -21,8 +21,6 @@ def test_health(client):
     assert data == {"status": "ok", "version": "0.1.0"}
 
 def test_cors_allows_configured_split_deploy_origins(monkeypatch):
-    """A UI hosted away from the engine (Vercel in front of Fly) names itself
-    in ATOMIC_ALLOWED_ORIGINS; unknown origins get no CORS grant."""
     monkeypatch.setenv("ATOMIC_ALLOWED_ORIGINS", "https://atomic.vercel.app")
     with TestClient(create_app()) as c:
         allowed = c.get("/api/health", headers={"Origin": "https://atomic.vercel.app"})

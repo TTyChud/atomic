@@ -1,10 +1,3 @@
-"""Evidence for the in-browser engine shim.
-
-The device engine runs the real app through these shims, so the tests pin
-the same behaviors the browser relies on: JSON routes, binary channels, true
-status codes, and jobs that complete inside their create call.
-"""
-
 import base64
 import json
 
@@ -23,7 +16,6 @@ _real_run_sync_in_worker_thread = (
 )
 
 def test_install_inline_threadpool_runs_sync_endpoints_without_a_thread():
-    """The WASM case: anyio must not spawn a thread for a sync endpoint."""
     import asyncio
 
     async def scenario():

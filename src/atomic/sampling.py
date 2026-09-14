@@ -54,7 +54,6 @@ def _phi_inverse_cdf(m: int):
     return phi, cdf
 
 def _validate_sampling_request(n: int, l: int, m: int, count: int, basis: str) -> None:
-    """Checks shared by every sampler; one place, one wording."""
     validate_quantum_numbers(n, l)
     if abs(m) > l:
         raise ValueError(f"|m| must be <= l, got m={m}, l={l}")
