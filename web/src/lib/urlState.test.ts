@@ -87,9 +87,11 @@ describe("currentUrlState", () => {
 });
 
 describe("the default place", () => {
-  it("opens on carbon", () => {
+  it("opens on carbon 6d", () => {
     expect(URL_DEFAULTS.system).toBe("c");
     expect(URL_DEFAULTS.n).toBe(6);
+    expect(URL_DEFAULTS.l).toBe(2);
+    expect(URL_DEFAULTS.m).toBe(0);
   });
 });
 

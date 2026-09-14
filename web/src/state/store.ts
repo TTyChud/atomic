@@ -249,7 +249,7 @@ function message(e: unknown): string {
 
 export const useAppStore = create<AppState>()((set, get) => ({
   n: 6,
-  l: 0,
+  l: 2,
   m: 0,
   system: "c",
   basis: "complex",

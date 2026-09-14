@@ -61,7 +61,7 @@ export interface UrlState {
 
 export const URL_DEFAULTS: UrlState = {
   n: 6,
-  l: 0,
+  l: 2,
   m: 0,
   system: "c",
   basis: "complex",
