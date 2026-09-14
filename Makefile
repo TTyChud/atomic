@@ -1,4 +1,4 @@
-.PHONY: help setup serve stop web-build web-dev test test-py test-web lint build engine-stage clean
+.PHONY: help setup serve stop web-build web-dev test test-py test-web lint build engine-stage prerender clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -19,6 +19,9 @@ web-build: ## Production build of the web UI (required before serve)
 
 engine-stage: ## Stage the Pyodide runtime + atomic wheel for the in-browser engine
 	python3 scripts/stage_engine_wheel.py
+
+prerender: ## Pre-render the default atom cloud as static assets
+	python3 scripts/prerender_default.py
 
 web-dev: ## Vite dev server with hot reload
 	cd web && npm run dev
