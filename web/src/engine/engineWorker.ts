@@ -43,18 +43,20 @@ async function installWheel(py: Pyodide): Promise<void> {
   );
 }
 
+const STAGED_PKGS = ["numpy", "scipy", "fastapi", "micropip"];
+
 async function boot(): Promise<void> {
   phase("runtime");
   const loadPyodide = (await import("pyodide")).loadPyodide;
   const py = (await loadPyodide({
     indexURL: `${STAGED_ROOT}pyodide/`,
+    packages: STAGED_PKGS,
     stdout: (s: string) => console.log("[engine]", s),
     stderr: (s: string) => console.warn("[engine]", s),
   })) as unknown as Pyodide;
 
   phase("engine");
 
-  await py.loadPackage(["numpy", "scipy", "fastapi", "micropip"]);
   await installWheel(py);
 
   await py.runPythonAsync(BOOT_PY);

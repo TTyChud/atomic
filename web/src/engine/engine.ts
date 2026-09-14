@@ -100,6 +100,13 @@ export class EngineBridge {
     return this.boot;
   }
 
+  prefetch(): void {
+    if (this.boot) return;
+    if (globalThis.Worker === undefined) return;
+    if (currentEngineMode() !== "local") return;
+    void this.start().catch(() => {});
+  }
+
   async request(url: string, init?: RequestInit): Promise<Response> {
     await this.start();
     const id = this.nextId++;
@@ -154,3 +161,5 @@ export class EngineBridge {
 }
 
 export const engine = new EngineBridge();
+
+engine.prefetch();
