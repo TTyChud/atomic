@@ -22,7 +22,6 @@ import {
   type ConstMultipliers,
   type PlaneQuantity,
 } from "../api/client";
-import { loadPrerenderedSample, matchesPrerenderDefault } from "../api/prerender";
 import type {
   AbsorptionInfo,
   ClassicalGhost,
@@ -356,20 +355,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
   sample: async () => {
     const s = get();
     set({ status: "loading", progress: 0, error: null });
-    if (matchesPrerenderDefault(s)) {
-      const pre = await loadPrerenderedSample();
-      if (pre) {
-        set({
-          positions: pre.positions,
-          density: pre.density,
-          phase: pre.phase,
-          meta: pre.meta,
-          status: "ready",
-          progress: 1,
-        });
-        return;
-      }
-    }
     try {
       const job = await createSampleJob({
         n: s.n,
